@@ -70,7 +70,7 @@ static int
 is_in_Mandelbrot(float Cre, float Cim, int maxiter)
 {
 	int iter;
-	float x = 0.0, y = 0.0, xto2 = 0.0, yto2 = 0.0, dist2;
+	float x = 0.0, y = 0.0, xto2 = 0.0, yto2 = 0.0, dist2 = 0.0;
 
 	for (iter = 0; dist2 < 4 && iter <= maxiter; iter++)
 	{
@@ -138,8 +138,7 @@ parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param *par
 #if LOADBALANCE == 0
 	// Replace this code with a naive *parallel* implementation.
 	// Only thread of ID 0 compute the whole picture
-	if(args->id == 0)
-	{
+	if(args->id == 0) {
 		// Define the region compute_chunk() has to compute
 		// Entire height: from 0 to picture's height
 		parameters->begin_h = 0;
@@ -156,11 +155,21 @@ parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param *par
 #if LOADBALANCE == 1
 	// Replace this code with your load-balanced smarter solution.
 	// Only thread of ID 0 compute the whole picture
-	if(args->id == 0)
-	{
+	if(args->id == 0) {
 		// Define the region compute_chunk() has to compute
 		// Entire height: from 0 to picture's height
 		parameters->begin_h = 0;
+		parameters->end_h = parameters->height / 2;
+		// Entire width: from 0 to picture's width
+		parameters->begin_w = 0;
+		parameters->end_w = parameters->width;
+
+		// Go
+		compute_chunk(parameters);
+	}	else if (args->id == 1) {
+		// Define the region compute_chunk() has to compute
+		// Entire height: from 0 to picture's height
+		parameters->begin_h = parameters->height / 2;
 		parameters->end_h = parameters->height;
 		// Entire width: from 0 to picture's width
 		parameters->begin_w = 0;
@@ -172,19 +181,12 @@ parallel_mandelbrot(struct mandelbrot_thread *args, struct mandelbrot_param *par
 #endif
 // Compiled only if LOADBALANCE = 2
 #if LOADBALANCE == 2
-	// *optional* replace this code with another load-balancing solution.
-	// Only thread of ID 0 compute the whole picture
-	if(args->id == 0)
-	{
-		// Define the region compute_chunk() has to compute
-		// Entire height: from 0 to picture's height
-		parameters->begin_h = 0;
-		parameters->end_h = parameters->height;
-		// Entire width: from 0 to picture's width
+
+	for (int i = args->id; i < parameters->height; i += NB_THREADS) {
+		parameters->begin_h = i;
+		parameters->end_h = i + 1;
 		parameters->begin_w = 0;
 		parameters->end_w = parameters->width;
-
-		// Go
 		compute_chunk(parameters);
 	}
 #endif
@@ -248,7 +250,7 @@ run_thread(void * buffer)
 
 		// Wait for the next work signal
 		pthread_barrier_wait(&thread_pool_barrier);
-	
+
 		// Fetch the latest parameters
 		param = mandelbrot_param;
 	}
