@@ -75,3 +75,8 @@ tramp
 
 # Debug files
 *.dSYM/
+
+# Specific lab ignores
+*.mandlebrot-*
+*.ppm
+
