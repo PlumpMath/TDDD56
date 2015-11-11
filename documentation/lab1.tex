@@ -1,0 +1,32 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{listings}
+\usepackage{hyperref}
+\lstset{
+language=C,
+basicstyle=\footnotesize
+}
+\begin{document}
+
+\subsection{Before the lab session}
+
+\begin{itemize}
+\item \textit{Write a detailed explatation why computation load can be imbalanced and how it affects the global performance.}
+
+  Since different pixels can take different amounts of time to calculate, for example black pixels taking the maximum amount of allowed iterations, the pixels assigned to one thread might be quicker to process than those assigned to a different thread.
+
+  The result of this being that the different threads being assigned the same number of pixels will have different execution times depending on if they get an area with majority black population or not.
+
+  Since black pixels tend to flock together rather than appearing stocastically it's reasonable that one thread will get a heavier load than another.
+
+
+\item \textit{Describe a load-balancing method that would help reducing the performance loss due to load-imbalance.}
+
+Instead of giving each thread big areas, as described in Figure 4 of the lab compendium, one could assign each interleaving rows or columns of the image 1 pixel wide which should distribute the load more eavenly.
+
+\end{itemize}
+
+
+
+\subsection{During the lab}
