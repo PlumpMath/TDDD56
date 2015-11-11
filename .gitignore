@@ -76,6 +76,14 @@ tramp
 # Debug files
 *.dSYM/
 
+# Specific lab ignores
+mandelbrot-*
+*.ppm
+*.svg
+lab1/labels.r
+lab1/table.csv
+lab1/test
+
 ### LaTeX ###
 *.acn
 *.acr
