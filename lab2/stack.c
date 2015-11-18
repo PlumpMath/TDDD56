@@ -89,17 +89,11 @@ void stack_push(stack_t* stack, int val)
 	stack_item_t* new_item = malloc(sizeof(stack_item_t));
 	stack_item_t* old_head;
 	new_item->val = val;
+	do {
+		old_head = stack->head;
+		new_item->prev = stack->head;
+	} while (!(__sync_bool_compare_and_swap(&stack->head, old_head, new_item)));
 
-	printf("\n%d  -  ", new_item->val);
-		do {
-			old_head = stack->head;
-			if(stack->head != NULL)
-				new_item->prev = stack->head;
-			else
-				new_item->prev = NULL;
-		} while (!(__sync_bool_compare_and_swap(&stack->head, old_head, new_item)));
-
-	printf("%d\n", stack->head->val);
 
 #else
   /*** Optional ***/
