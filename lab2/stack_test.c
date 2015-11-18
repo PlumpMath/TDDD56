@@ -111,6 +111,10 @@ test_setup()
   // Allocate a new stack and reset its values
   stack = malloc(sizeof(stack_t));
 
+	#if NON_BLOCKING == 0
+	pthread_mutex_init(&stack->lock, NULL);	
+	#endif
+
   // Reset explicitely all members to a well-known initial value
   // For instance (to be deleted as your stack design progresses):
   stack->head = NULL;
@@ -121,6 +125,15 @@ test_teardown()
 {
   // Do not forget to free your stacks after each test
   // to avoid memory leaks
+
+	stack_item_t* tmp;
+	stack_item_t* item = stack->head;
+	while(item != NULL) {
+		tmp = item->prev;
+		free(item);
+		item = tmp;
+	}
+
   free(stack);
 }
 
@@ -137,6 +150,9 @@ test_push_safe()
   // several threads push concurrently to it
 
   // Do some work
+  stack_push(stack, 1);
+  stack_push(stack, 2);
+  stack_push(stack, 3);
   stack_push(stack, 123);
 
   // check if the stack is in a consistent state
@@ -147,7 +163,7 @@ test_push_safe()
   assert(stack->head->val == 123);
 
   // For now, this test always fails
-  return 0;
+  return 1;
 }
 
 int

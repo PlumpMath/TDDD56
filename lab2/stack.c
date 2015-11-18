@@ -65,7 +65,14 @@ void stack_push(stack_t* stack, int val)
   // Implement a lock_based stack
 	stack_item_t *item = malloc(sizeof(stack_item_t));
 	item->val = val;
+
+	pthread_mutex_lock(&stack->lock);
+	item->prev = stack->head;
+	if(stack->head != NULL) {
+		stack->head->next = item;
+	}
 	stack->head = item;
+	pthread_mutex_unlock(&stack->lock);
 
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
@@ -82,8 +89,22 @@ void stack_push(stack_t* stack, int val)
 
 int stack_pop(stack_t* stack)
 {
+	int val;
+
 #if NON_BLOCKING == 0
   // Implement a lock_based stack
+	pthread_mutex_lock(&stack->lock);
+	stack_item_t *item = stack->head;
+	val = item->val;
+	stack->head = item->prev;
+	if(stack->head != NULL) {
+		stack->head->next = NULL;
+	}
+	pthread_mutex_unlock(&stack->lock);
+	free(item);
+
+	
+
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
 #else
@@ -91,6 +112,6 @@ int stack_pop(stack_t* stack)
   // Implement a software CAS-based stack
 #endif
 
-  return 0;
+  return val;
 }
 

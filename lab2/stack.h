@@ -39,6 +39,10 @@ typedef struct stack_item stack_item_t;
 struct stack
 {
 	stack_item_t	 *head;
+
+#if NON_BLOCKING == 0
+	pthread_mutex_t lock;
+#endif
 };
 typedef struct stack stack_t;
 
