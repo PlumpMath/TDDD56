@@ -1,0 +1,31 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+\usepackage{listings}
+\usepackage{hyperref}
+\lstset{
+language=C,
+basicstyle=\footnotesize
+}
+\begin{document}
+
+\section{Lab 2}
+\subsection{Before the lab session}
+
+\begin{itemize}
+\item \textit{Write an explaination on how CAS can be used to implement protection for concurrent use of data structures.}
+
+  Compare And Swap (CAS) can be used to implement a lock free concurrent stack by, for example:
+
+  A stack has a head* and back*. A list item has a next* and previous*. When we insert an item new_item into the stack we read the head* into last_item and do a CAS on list.head->next; if head->next == null, swap in new_item. Next we do a CAS on head*; if list.head == last_item, swap in new_item.
+
+\item \textit{Sketch a scenario featuring several threads raising the ABA problem.}
+
+
+\item \textit{Implement EVERYTHING!}
+
+\end{itemize}
+
+\end{document}
