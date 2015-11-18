@@ -27,20 +27,26 @@
 #ifndef STACK_H
 #define STACK_H
 
+
+struct stack_item
+{
+	int val;
+	struct stack_item* next;
+	struct stack_item* prev;
+};
+typedef struct stack_item stack_item_t;
+
 struct stack
 {
-  // This is a fake structure; change it to your needs
-  int change_this_member;
+	stack_item_t	 *head;
 };
 typedef struct stack stack_t;
 
 // Pushes an element in a thread-safe manner
-int /* Return the type you prefer */
-stack_push(/* Make your own signature */);
+void stack_push(stack_t* stack, int value);
 
 // Pops an element in a thread-safe manner
-int /* Return the type you prefer */
-stack_pop(/* Make your own signature */);
+int stack_pop(stack_t* stack);
 
 
 
@@ -53,7 +59,7 @@ stack_pop(/* Make your own signature */);
 
 // Enable assert() only if NDEBUG is not set
 #ifndef NDEBUG
-#define assert(expr) if(!expr) { fprintf(stderr, "[%s:%s:%d][ERROR] Assertion failure: %s\n", __FILE__, __FUNCTION__, __LINE__, #expr); abort(); }
+#define assert(expr) if(!(expr)) { fprintf(stderr, "[%s:%s:%d][ERROR] Assertion failure: %s\n", __FILE__, __FUNCTION__, __LINE__, #expr); abort(); }
 #else
 // Otherwise define it as nothing
 #define assert(expr)
@@ -61,6 +67,6 @@ stack_pop(/* Make your own signature */);
 
 // Debug practice: function that can check anytime is a stack is in a legal state using assert() internally
 void
-stack_check(stack_t *stack);
+stack_check(stack_t* stack);
 
 #endif /* STACK_H */
