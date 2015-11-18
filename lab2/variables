@@ -10,8 +10,8 @@ compile=(measure max_push_pop nb_threads non_blocking)
 
 measure="1 2"
 max_push_pop="500000"
-nb_threads=`seq 1 6`
-non_blocking="0 1 2"
+nb_threads=`seq 1 2`
+non_blocking="0 1"
 
 labels_non_blocking="0:Software locks; 1: Hardware CAS; 2: Software CAS"
 labels_measure="0: no measurement; 1: POP; 2: PUSH"

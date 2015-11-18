@@ -31,6 +31,19 @@
 #include "stack.h"
 #include "non_blocking.h"
 
+#if WEIRD_NON_BLOCKING_DEF == 1
+inline size_t
+cas(size_t* reg, size_t oldval, size_t newval)
+{
+  asm volatile( "lock; cmpxchg %2, %1":
+                "=a"(oldval):
+                "m"(*reg), "r"(newval), "a"(oldval):
+                "memory" );
+
+  return oldval;
+}
+#endif
+
 #define test_run(test)\
   printf("[%s:%s:%i] Running test '%s'... ", __FILE__, __FUNCTION__, __LINE__, #test);\
   test_setup();\
@@ -154,9 +167,9 @@ int test_pop_safe() {
   stack_push(stack, 1);
   stack_push(stack, 2);
   stack_push(stack, 3);
-	assert(stack_pop(stack) == 3);
-	assert(stack_pop(stack) == 2);
-	assert(stack_pop(stack) == 1);
+ 	assert(stack_pop(stack) == 3);
+ 	assert(stack_pop(stack) == 2);
+ 	assert(stack_pop(stack) == 1);
 	return 1;
 }
 

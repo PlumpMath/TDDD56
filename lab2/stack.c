@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdatomic.h>
 
 #include "stack.h"
 #include "non_blocking.h"
@@ -46,7 +47,7 @@
 #endif
 
 static stack_item_t pool[MAX_PUSH_POP];
-static int cur;
+_Atomic static size_t cur;
 
 void
 stack_init()
@@ -82,12 +83,7 @@ void stack_push(stack_t* stack, int val)
 	pthread_mutex_unlock(&stack->lock);
 
 #elif NON_BLOCKING == 1
-	size_t c;
-	do {
-		c = cas(&cur, cur, c + 1);
-	} while(cur != c);
-	
-	stack_item_t* new_item = &pool[c];
+	stack_item_t* new_item = &pool[cur++];
 	stack_item_t* old_head;
 	new_item->val = val;
 	do {
@@ -118,9 +114,14 @@ int stack_pop(stack_t* stack) {
 	stack->head = item->prev;
 	pthread_mutex_unlock(&stack->lock);
 	//free(item);
-	free(item);
 #elif NON_BLOCKING == 1
-	stack_item_t* item = __sync_val_compare_and_swap(&stack->head, stack->head, stack->head->prev);
+	stack_item_t* item;
+	stack_item_t* old_head;
+	do {
+		old_head = stack->head;
+		item = __sync_val_compare_and_swap(&stack->head, old_head, stack->head->prev);
+	}	while(item != old_head);
+
 	val = item->val;
 	// free(item);
 	return val;
