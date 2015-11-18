@@ -46,6 +46,8 @@ WHY??
 #warning Stacks are synchronized through hardware CAS
 #else
 #warning Stacks are synchronized through lock-based CAS
+#endif
+#endif
 
 void
 stack_check(stack_t* stack)
@@ -54,20 +56,6 @@ stack_check(stack_t* stack)
 #if MEASURE == 0
 	// This test fails if the task is not allocated or if the allocation failed
 	assert(stack != NULL);
-
-	if(stack->head != NULL) {
-		assert(stack->head->next == NULL);
-	}
-
-	if(stack->head != NULL && stack->head->prev != NULL) {
-		stack_item_t* next = stack->head;
-		stack_item_t* prev = stack->head->prev;
-		while(prev != NULL) {
-			assert(prev->next == next);
-			next = prev;
-			prev = next->prev;
-		} 
-	}
 #endif
 }
 
