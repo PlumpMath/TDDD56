@@ -50,6 +50,7 @@ void stack_push(stack_t* stack, int value);
 // Pops an element in a thread-safe manner
 int stack_pop(stack_t* stack);
 
+void stack_init();
 
 
 /* Debug practice: check the boolean expression expr; if it computes to 0, print a warning message on standard error and exit */

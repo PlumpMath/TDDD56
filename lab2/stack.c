@@ -49,6 +49,15 @@ WHY??
 #endif
 #endif
 
+static stack_item_t pool[MAX_PUSH_POP];
+static int cur;
+
+void
+stack_init()
+{
+	cur = 0;
+}
+
 void
 stack_check(stack_t* stack)
 {
@@ -63,24 +72,28 @@ void stack_push(stack_t* stack, int val)
 {
 #if NON_BLOCKING == 0
   // Implement a lock_based stack
-	stack_item_t *item = malloc(sizeof(stack_item_t));
+	// stack_item_t *item = malloc(sizeof(stack_item_t));
+	stack_item_t* item = &pool[cur++];
 	item->val = val;
 
 	pthread_mutex_lock(&stack->lock);
 	item->prev = stack->head;
-
 	stack->head = item;
 	pthread_mutex_unlock(&stack->lock);
 
 #elif NON_BLOCKING == 1
-
-	stack_item_t* new_item = malloc(sizeof(stack_item_t));
+	int c;
+	do {
+		c = cas(&cur, cur, c + 1);
+	} while(cur != c);
+	
+	stack_item_t* new_item = &pool[c];
 	stack_item_t* old_head;
 	new_item->val = val;
 	do {
 		old_head = stack->head;
 		new_item->prev = stack->head;
-	} while (!(__sync_bool_compare_and_swap(&stack->head, old_head, new_item)));
+	} while (!__sync_bool_compare_and_swap(&stack->head, old_head, new_item));
 
 
 #else
@@ -104,13 +117,12 @@ int stack_pop(stack_t* stack) {
 	val = item->val;
 	stack->head = item->prev;
 	pthread_mutex_unlock(&stack->lock);
-	free(item);
-
+	//free(item);
 #elif NON_BLOCKING == 1
 
 	stack_item_t* item = __sync_val_compare_and_swap(&stack->head, stack->head, stack->head->prev);
 	val = item->val;
-	free(item);
+	// free(item);
 	return val;
 
 #else

@@ -115,6 +115,8 @@ void test_setup() {
   // Allocate and initialize your test stack before each test
   data = DATA_VALUE;
 
+	stack_init();
+
   // Allocate a new stack and reset its values
   stack = malloc(sizeof(stack_t));
 
@@ -130,15 +132,6 @@ void test_setup() {
 void test_teardown() {
   // Do not forget to free your stacks after each test
   // to avoid memory leaks
-
-	stack_item_t* tmp;
-	stack_item_t* item = stack->head;
-	while(item != NULL) {
-		tmp = item->prev;
-		free(item);
-		item = tmp;
-	}
-
   free(stack);
 }
 
