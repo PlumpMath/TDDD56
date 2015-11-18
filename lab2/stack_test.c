@@ -64,7 +64,6 @@ typedef int data_t;
 stack_t *stack;
 data_t data;
 
-
 #if MEASURE != 0
 struct stack_measure_arg
 {
@@ -142,38 +141,52 @@ void test_finalize() {
   // Destroy properly your test batch
 }
 
-int test_push_safe() {
-  // Make sure your stack remains in a good state with expected content when
-  // several threads push concurrently to it
-
-  // Do some work
-  stack_push(stack, 1);
-  stack_push(stack, 2);
-  stack_push(stack, 3);
-  stack_push(stack, 123);
-
-  // check if the stack is in a consistent state
-  stack_check(stack);
-
-  // check other properties expected after a push operation
-  // (this is to be updated as your stack design progresses)
-  assert(stack->head->val == 123);
-
-  // For now, this test always fails
-  return 1;
+void* thread_push_safe(void* arg) {
+	for (int i = 1; i <= 240; i++)
+		stack_push(stack, i);
+	return NULL;
 }
 
+int test_push_safe() {
+  pthread_attr_t attr;
+  pthread_t thread[NB_THREADS];
+  pthread_mutexattr_t mutex_attr;
+  pthread_mutex_t lock;
+
+  int i;
+
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_mutexattr_init(&mutex_attr);
+  pthread_mutex_init(&lock, &mutex_attr);
+
+  for (i = 0; i < NB_THREADS; i++) {
+		pthread_create(&thread[i], &attr, &thread_push_safe, NULL);
+	}
+  for (i = 0; i < NB_THREADS; i++) {
+		pthread_join(thread[i], NULL);
+	}
+	int sum = 0;
+  for (i = 0; i < NB_THREADS * 240; i++) {
+		sum += stack_pop(stack);
+	}
+	assert(sum == 120 * 241 * NB_THREADS);
+	return 1;
+}
+
+
+_Atomic int pop_sum;
+
 void* thread_pop_safe(void* arg) {
-  stack_push(stack, 1);
-  stack_push(stack, 2);
-  stack_push(stack, 3);
-  stack_push(stack, 4);
-  stack_push(stack, 5);
+	for (int i = 1; i <= 240; i++)
+		stack_push(stack, i);
+	for (int i = 1; i <= 240; i++)
+		pop_sum += stack_pop(stack);
+
 	return NULL;
 }
 
 int test_pop_safe() {
-
   pthread_attr_t attr;
   pthread_t thread[NB_THREADS];
   pthread_mutexattr_t mutex_attr;
@@ -192,11 +205,8 @@ int test_pop_safe() {
   for (i = 0; i < NB_THREADS; i++) {
 		pthread_join(thread[i], NULL);
 	}
-	int sum = 0;
-  for (i = 0; i < NB_THREADS * 5; i++) {
-		sum += stack_pop(stack);
-	}
-	assert(sum == 3 * 5 * NB_THREADS);
+
+	assert(pop_sum == 120 * 241 * NB_THREADS);
 	return 1;
 }
 
