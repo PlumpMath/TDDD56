@@ -21,13 +21,9 @@
  *
  */
 
-/*
-WHY??
-
 #ifndef DEBUG
 #define NDEBUG
 #endif
-*/
 
 #include <assert.h>
 #include <pthread.h>
@@ -63,6 +59,10 @@ stack_check(stack_t* stack)
 {
 	// Do not perform any sanity check if performance is bein measured
 #if MEASURE == 0
+	// Use assert() to check if your stack is in a state that makes sens
+	// This test should always pass
+	assert(1 == 1);
+
 	// This test fails if the task is not allocated or if the allocation failed
 	assert(stack != NULL);
 #endif
@@ -82,7 +82,7 @@ void stack_push(stack_t* stack, int val)
 	pthread_mutex_unlock(&stack->lock);
 
 #elif NON_BLOCKING == 1
-	int c;
+	size_t c;
 	do {
 		c = cas(&cur, cur, c + 1);
 	} while(cur != c);
@@ -118,8 +118,8 @@ int stack_pop(stack_t* stack) {
 	stack->head = item->prev;
 	pthread_mutex_unlock(&stack->lock);
 	//free(item);
+	free(item);
 #elif NON_BLOCKING == 1
-
 	stack_item_t* item = __sync_val_compare_and_swap(&stack->head, stack->head, stack->head->prev);
 	val = item->val;
 	// free(item);
