@@ -27,7 +27,6 @@
 #ifndef STACK_H
 #define STACK_H
 
-
 struct stack_item
 {
 	int val;

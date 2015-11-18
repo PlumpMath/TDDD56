@@ -51,6 +51,17 @@ typedef int data_t;
 stack_t *stack;
 data_t data;
 
+inline size_t
+cas(size_t* reg, size_t oldval, size_t newval)
+{
+  asm volatile( "lock; cmpxchg %2, %1":
+                "=a"(oldval):
+                "m"(*reg), "r"(newval), "a"(oldval):
+                "memory" );
+
+  return oldval;
+}
+
 #if MEASURE != 0
 struct stack_measure_arg
 {

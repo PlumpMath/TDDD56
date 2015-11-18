@@ -1,1 +1,6 @@
 stack
+labels.r
+table.csv
+test/
+stack-*
+
