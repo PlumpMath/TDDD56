@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <stddef.h>
+#include <unistd.h>
 
 #include "stack.h"
 #include "non_blocking.h"
@@ -142,22 +143,56 @@ void test_finalize() {
   // Destroy properly your test batch
 }
 
+void* test_push_safe_thread(void *arg) {
+	int* n = (int *)arg;
+	for(int i = 0; i < MAX_PUSH_POP; i++) {
+		stack_push(stack, (*n) + 1);
+		printf("PUSHING: %d\n", (*n) + 1);
+	}
+
+	return NULL;
+}
+
 int test_push_safe() {
   // Make sure your stack remains in a good state with expected content when
   // several threads push concurrently to it
+  int i;
+  pthread_t thread[NB_THREADS];
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
 
-  // Do some work
-  stack_push(stack, 1);
-  stack_push(stack, 2);
-  stack_push(stack, 3);
-  stack_push(stack, 123);
+	int nums[NB_THREADS];
+
+  for (i = 0; i < NB_THREADS; i++)
+ 	{
+		nums[i] = i;
+ 	  pthread_create(&thread[i], &attr, test_push_safe_thread, (void*) &nums[i]);
+ 	}
+
+  for (i = 0; i < NB_THREADS; i++)
+	{
+	  pthread_join(thread[i], NULL);
+	}
+
 
   // check if the stack is in a consistent state
   stack_check(stack);
 
-  // check other properties expected after a push operation
-  // (this is to be updated as your stack design progresses)
-  assert(stack->head->val == 123);
+	int sum2 = 0;
+	for(i = 0; i < NB_THREADS; i++) {
+		sum2 += (i+1) * MAX_PUSH_POP;
+	}
+
+	int sum = 0;
+	while(stack->head != NULL) {
+		int popped = stack_pop(stack);
+		printf("POPPED: %d\n", popped);
+		sum += popped; 
+		if(sum > sum2) {
+			printf("%d should be equal to %d, to is getting bigger!\n", sum, sum2);
+			assert(sum == sum2);
+		}
+	}
 
   // For now, this test always fails
   return 1;

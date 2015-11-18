@@ -91,6 +91,8 @@ void stack_push(stack_t* stack, int val)
 		new_item->prev = stack->head;
 	} while (!__sync_bool_compare_and_swap(&stack->head, old_head, new_item));
 
+	printf("NANANA\n");
+
 
 #else
   /*** Optional ***/
