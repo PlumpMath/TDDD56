@@ -5,20 +5,20 @@
  *  Copyright 2011 Nicolas Melot
  *
  * This file is part of TDDD56.
- * 
+ *
  *     TDDD56 is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
- * 
+ *
  *     TDDD56 is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
- * 
+ *
  *     You should have received a copy of the GNU General Public License
  *     along with TDDD56. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 /*
@@ -46,13 +46,11 @@ WHY??
 #warning Stacks are synchronized through hardware CAS
 #else
 #warning Stacks are synchronized through lock-based CAS
-#endif
-#endif
 
 void
 stack_check(stack_t* stack)
 {
-// Do not perform any sanity check if performance is bein measured
+	// Do not perform any sanity check if performance is bein measured
 #if MEASURE == 0
 	// This test fails if the task is not allocated or if the allocation failed
 	assert(stack != NULL);
@@ -79,6 +77,7 @@ void stack_push(stack_t* stack, int val)
   // Implement a lock_based stack
 	stack_item_t *item = malloc(sizeof(stack_item_t));
 	item->val = val;
+	item->next = NULL;
 
 	pthread_mutex_lock(&stack->lock);
 	item->prev = stack->head;
@@ -89,7 +88,19 @@ void stack_push(stack_t* stack, int val)
 	pthread_mutex_unlock(&stack->lock);
 
 #elif NON_BLOCKING == 1
-  // Implement a harware CAS-based stack
+
+	stack_item_t* new_item = malloc(sizeof(stack_item_t));
+	new_item->val = val;
+	new_item->next = NULL;
+	if(stack->head != NULL) {
+		do {
+			new_item->prev = stack->head;
+		} while (__sync_bool_compare_and_swap(&stack->head->next, NULL, new_item));
+	}
+	else {
+		new_item->prev = NULL;
+		stack->head = new_item;
+	}
 #else
   /*** Optional ***/
   // Implement a software CAS-based stack
@@ -116,8 +127,8 @@ int stack_pop(stack_t* stack)
 	}
 	pthread_mutex_unlock(&stack->lock);
 	free(item);
-
 #elif NON_BLOCKING == 1
+	val=1;
   // Implement a harware CAS-based stack
 #else
   /*** Optional ***/
@@ -126,4 +137,3 @@ int stack_pop(stack_t* stack)
 
   return val;
 }
-
