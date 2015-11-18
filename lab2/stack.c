@@ -94,8 +94,7 @@ void stack_push(stack_t* stack, int val)
   // stack_check((stack_t*)1);
 }
 
-int stack_pop(stack_t* stack)
-{
+int stack_pop(stack_t* stack) {
 	int val;
 
 #if NON_BLOCKING == 0
@@ -106,8 +105,13 @@ int stack_pop(stack_t* stack)
 	stack->head = item->prev;
 	pthread_mutex_unlock(&stack->lock);
 	free(item);
+
 #elif NON_BLOCKING == 1
-	val=1;
+
+	stack_item_t* item = __sync_val_compare_and_swap(&stack->head, stack->head, stack->head->prev);
+	val = item->val;
+	free(item);
+	return val;
 
 #else
   /*** Optional ***/

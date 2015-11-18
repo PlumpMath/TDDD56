@@ -5,20 +5,20 @@
  *  Copyright 2011 Nicolas Melot
  *
  * This file is part of TDDD56.
- * 
+ *
  *     TDDD56 is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
- * 
+ *
  *     TDDD56 is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
- * 
+ *
  *     You should have received a copy of the GNU General Public License
  *     along with TDDD56. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 #include <stdio.h>
@@ -107,15 +107,11 @@ stack_measure_push(void* arg)
 #endif
 
 /* A bunch of optional (but useful if implemented) unit tests for your stack */
-void
-test_init()
-{
+void test_init() {
   // Initialize your test batch
 }
 
-void
-test_setup()
-{
+void test_setup() {
   // Allocate and initialize your test stack before each test
   data = DATA_VALUE;
 
@@ -123,7 +119,7 @@ test_setup()
   stack = malloc(sizeof(stack_t));
 
 	#if NON_BLOCKING == 0
-	pthread_mutex_init(&stack->lock, NULL);	
+	pthread_mutex_init(&stack->lock, NULL);
 	#endif
 
   // Reset explicitely all members to a well-known initial value
@@ -131,9 +127,7 @@ test_setup()
   stack->head = NULL;
 }
 
-void
-test_teardown()
-{
+void test_teardown() {
   // Do not forget to free your stacks after each test
   // to avoid memory leaks
 
@@ -148,15 +142,11 @@ test_teardown()
   free(stack);
 }
 
-void
-test_finalize()
-{
+void test_finalize() {
   // Destroy properly your test batch
 }
 
-int
-test_push_safe()
-{
+int test_push_safe() {
   // Make sure your stack remains in a good state with expected content when
   // several threads push concurrently to it
 
@@ -177,13 +167,13 @@ test_push_safe()
   return 1;
 }
 
-int
-test_pop_safe()
-{
-  // Same as the test above for parallel pop operation
-
-  // For now, this test always fails
-  return 0;
+int test_pop_safe() {
+  stack_push(stack, 1);
+  stack_push(stack, 2);
+  stack_push(stack, 3);
+	assert(stack_pop(stack) == 3);
+	assert(stack_pop(stack) == 2);
+	assert(stack_pop(stack) == 1);
 }
 
 // 3 Threads should be enough to raise and detect the ABA problem
@@ -253,7 +243,7 @@ test_cas()
 
   counter = 0;
   pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE); 
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
   pthread_mutexattr_init(&mutex_attr);
   pthread_mutex_init(&lock, &mutex_attr);
 
