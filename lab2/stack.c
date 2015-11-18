@@ -21,9 +21,13 @@
  * 
  */
 
+/*
+WHY??
+
 #ifndef DEBUG
 #define NDEBUG
 #endif
+*/
 
 #include <assert.h>
 #include <pthread.h>
@@ -50,12 +54,22 @@ stack_check(stack_t* stack)
 {
 // Do not perform any sanity check if performance is bein measured
 #if MEASURE == 0
-	// Use assert() to check if your stack is in a state that makes sens
-	// This test should always pass 
-	assert(1 == 1);
-
 	// This test fails if the task is not allocated or if the allocation failed
 	assert(stack != NULL);
+
+	if(stack->head != NULL) {
+		assert(stack->head->next == NULL);
+	}
+
+	if(stack->head != NULL && stack->head->prev != NULL) {
+		stack_item_t* next = stack->head;
+		stack_item_t* prev = stack->head->prev;
+		while(prev != NULL) {
+			assert(prev->next == next);
+			next = prev;
+			prev = next->prev;
+		} 
+	}
 #endif
 }
 
@@ -102,8 +116,6 @@ int stack_pop(stack_t* stack)
 	}
 	pthread_mutex_unlock(&stack->lock);
 	free(item);
-
-	
 
 #elif NON_BLOCKING == 1
   // Implement a harware CAS-based stack
