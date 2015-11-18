@@ -163,13 +163,40 @@ int test_push_safe() {
   return 1;
 }
 
-int test_pop_safe() {
+void* thread_pop_safe(void* arg) {
   stack_push(stack, 1);
   stack_push(stack, 2);
   stack_push(stack, 3);
- 	assert(stack_pop(stack) == 3);
- 	assert(stack_pop(stack) == 2);
- 	assert(stack_pop(stack) == 1);
+  stack_push(stack, 4);
+  stack_push(stack, 5);
+	return NULL;
+}
+
+int test_pop_safe() {
+
+  pthread_attr_t attr;
+  pthread_t thread[NB_THREADS];
+  pthread_mutexattr_t mutex_attr;
+  pthread_mutex_t lock;
+
+  int i;
+
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_mutexattr_init(&mutex_attr);
+  pthread_mutex_init(&lock, &mutex_attr);
+
+  for (i = 0; i < NB_THREADS; i++) {
+		pthread_create(&thread[i], &attr, &thread_pop_safe, NULL);
+	}
+  for (i = 0; i < NB_THREADS; i++) {
+		pthread_join(thread[i], NULL);
+	}
+	int sum = 0;
+  for (i = 0; i < NB_THREADS * 5; i++) {
+		sum += stack_pop(stack);
+	}
+	assert(sum == 3 * 5 * NB_THREADS);
 	return 1;
 }
 
@@ -199,9 +226,7 @@ struct thread_test_cas_args
 };
 typedef struct thread_test_cas_args thread_test_cas_args_t;
 
-void*
-thread_test_cas(void* arg)
-{
+void* thread_test_cas(void* arg) {
 #if NON_BLOCKING != 0
   thread_test_cas_args_t *args = (thread_test_cas_args_t*) arg;
   int i;
