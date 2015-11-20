@@ -64,7 +64,6 @@ typedef int data_t;
 stack_t *stack;
 data_t data;
 
-
 #if MEASURE != 0
 struct stack_measure_arg
 {
@@ -142,66 +141,74 @@ void test_finalize() {
   // Destroy properly your test batch
 }
 
-void* test_push_safe_thread(void *arg) {
-	int* n = (int *)arg;
-	for(int i = 0; i < MAX_PUSH_POP / NB_THREADS; i++) {
-		pthread_yield();
-		stack_push(stack, (*n) + 1);
-	}
-
+void* thread_push_safe(void* arg) {
+	for (int i = 1; i <= (MAX_PUSH_POP / NB_THREADS); i++)
+		stack_push(stack, i);
 	return NULL;
 }
 
 int test_push_safe() {
-  // Make sure your stack remains in a good state with expected content when
-  // several threads push concurrently to it
-  int i;
-  pthread_t thread[NB_THREADS];
   pthread_attr_t attr;
+  pthread_t thread[NB_THREADS];
   pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-	int nums[NB_THREADS];
+  int i;
 
-  for (i = 0; i < NB_THREADS; i++)
- 	{
-		nums[i] = i;
- 	  pthread_create(&thread[i], &attr, test_push_safe_thread, (void*) &nums[i]);
- 	}
-
-  for (i = 0; i < NB_THREADS; i++)
-	{
-	  pthread_join(thread[i], NULL);
+  for (i = 0; i < NB_THREADS; i++) {
+		pthread_create(&thread[i], &attr, &thread_push_safe, NULL);
 	}
-
-
-  // check if the stack is in a consistent state
-  stack_check(stack);
+  for (i = 0; i < NB_THREADS; i++) {
+		pthread_join(thread[i], NULL);
+	}
+	int sum = 0;
+	while(stack->head != NULL) {
+		sum += stack_pop(stack);
+	}
 
 	int sum2 = 0;
 	for(i = 0; i < NB_THREADS; i++) {
-		sum2 += (i+1) * (MAX_PUSH_POP / NB_THREADS);
-	}
-
-	int sum = 0;
-	while(stack->head != NULL) {
-		sum += stack_pop(stack); 
-		if(sum > sum2) {
-			printf("%d should be equal to %d, to is getting bigger!\n", sum, sum2);
+		for(int n = 1; n <= (MAX_PUSH_POP / NB_THREADS); n++) {
+			sum2 += n;
 		}
 	}
+
 	assert(sum == sum2);
 
-  // For now, this test always fails
-  return 1;
+	return 1;
+}
+
+_Atomic int pop_sum;
+
+void* thread_pop_safe(void* arg) {
+	for (int i = 1; i <= 240; i++)
+		stack_push(stack, i);
+	for (int i = 1; i <= 240; i++)
+		pop_sum += stack_pop(stack);
+
+	return NULL;
 }
 
 int test_pop_safe() {
-  stack_push(stack, 1);
-  stack_push(stack, 2);
-  stack_push(stack, 3);
- 	assert(stack_pop(stack) == 3);
- 	assert(stack_pop(stack) == 2);
- 	assert(stack_pop(stack) == 1);
+  pthread_attr_t attr;
+  pthread_t thread[NB_THREADS];
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+  int i;
+
+	stack_init();
+
+  for (i = 0; i < NB_THREADS; i++) {
+		pthread_create(&thread[i], &attr, &thread_pop_safe, NULL);
+	}
+  for (i = 0; i < NB_THREADS; i++) {
+		pthread_join(thread[i], NULL);
+	}
+
+	printf("%d\n", pop_sum);
+
+	assert(pop_sum == 120 * 241 * NB_THREADS);
 	return 1;
 }
 
@@ -231,9 +238,7 @@ struct thread_test_cas_args
 };
 typedef struct thread_test_cas_args thread_test_cas_args_t;
 
-void*
-thread_test_cas(void* arg)
-{
+void* thread_test_cas(void* arg) {
 #if NON_BLOCKING != 0
   thread_test_cas_args_t *args = (thread_test_cas_args_t*) arg;
   int i;
@@ -277,24 +282,24 @@ test_cas()
   pthread_mutex_init(&lock, &mutex_attr);
 
   for (i = 0; i < NB_THREADS; i++)
-    {
-      args[i].id = i;
-      args[i].counter = &counter;
-      args[i].lock = &lock;
-      pthread_create(&thread[i], &attr, &thread_test_cas, (void*) &args[i]);
-    }
+	{
+		args[i].id = i;
+		args[i].counter = &counter;
+		args[i].lock = &lock;
+		pthread_create(&thread[i], &attr, &thread_test_cas, (void*) &args[i]);
+	}
 
   for (i = 0; i < NB_THREADS; i++)
-    {
-      pthread_join(thread[i], NULL);
-    }
+ 	{
+		pthread_join(thread[i], NULL);
+ 	}
 
   success = counter == (size_t)(NB_THREADS * MAX_PUSH_POP);
 
   if (!success)
-    {
-      printf("Got %ti, expected %i. ", counter, NB_THREADS * MAX_PUSH_POP);
-    }
+	{
+		printf("Got %ti, expected %i. ", counter, NB_THREADS * MAX_PUSH_POP);
+	}
 
   assert(success);
   return success;
