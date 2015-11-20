@@ -61,8 +61,12 @@ typedef int data_t;
 #define DATA_SIZE sizeof(data_t)
 #define DATA_VALUE 5
 
+
 stack_t *stack;
 data_t data;
+
+static stack_item_t pool[MAX_PUSH_POP];
+_Atomic static size_t pool_position = 0;
 
 #if MEASURE != 0
 struct stack_measure_arg
@@ -117,14 +121,14 @@ void test_setup() {
   // Allocate and initialize your test stack before each test
   data = DATA_VALUE;
 
-	stack_init();
-
   // Allocate a new stack and reset its values
   stack = malloc(sizeof(stack_t));
 
 	#if NON_BLOCKING == 0
 	pthread_mutex_init(&stack->lock, NULL);
 	#endif
+
+	pool_position = 0;
 
   // Reset explicitely all members to a well-known initial value
   // For instance (to be deleted as your stack design progresses):
@@ -142,8 +146,11 @@ void test_finalize() {
 }
 
 void* thread_push_safe(void* arg) {
-	for (int i = 1; i <= (MAX_PUSH_POP / NB_THREADS); i++)
-		stack_push(stack, i);
+	for (int i = 1; i <= (MAX_PUSH_POP / NB_THREADS); i++){
+		stack_item_t* new_item = &pool[pool_position++];
+		new_item->val = i;
+		stack_push(stack, new_item);
+	}
 	return NULL;
 }
 
@@ -163,7 +170,7 @@ int test_push_safe() {
 	}
 	int sum = 0;
 	while(stack->head != NULL) {
-		sum += stack_pop(stack);
+		sum += stack_pop(stack)->val;
 	}
 
 	int sum2 = 0;
@@ -181,11 +188,14 @@ int test_push_safe() {
 _Atomic int pop_sum;
 
 void* thread_pop_safe(void* arg) {
-	for (int i = 1; i <= 240; i++)
-		stack_push(stack, i);
-	for (int i = 1; i <= 240; i++)
-		pop_sum += stack_pop(stack);
-
+	for (int i = 1; i <= 240; i++) {
+		stack_item_t* new_item = &pool[pool_position++];
+		new_item->val = i;
+		stack_push(stack, new_item);
+	}
+	for (int i = 1; i <= 240; i++) {
+		pop_sum += stack_pop(stack)->val;
+	}
 	return NULL;
 }
 
@@ -196,8 +206,6 @@ int test_pop_safe() {
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   int i;
-
-	stack_init();
 
   for (i = 0; i < NB_THREADS; i++) {
 		pthread_create(&thread[i], &attr, &thread_pop_safe, NULL);

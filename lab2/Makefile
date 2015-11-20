@@ -24,13 +24,13 @@ clean:
 	$(RM) *.o
 
 $(OUT): stack_test.c stack$(STACK_SUFFIX).o nonblocking$(NON_BLOCKING_SUFFIX).o
-	gcc $(CFLAGS) stack$(STACK_SUFFIX).o non_blocking$(NON_BLOCKING_SUFFIX).o stack_test.c -o $(OUT)
+	clang $(CFLAGS) stack$(STACK_SUFFIX).o non_blocking$(NON_BLOCKING_SUFFIX).o stack_test.c -o $(OUT)
 
 stack$(STACK_SUFFIX).o: stack.c stack.h
-	gcc $(CFLAGS) -c -o stack$(STACK_SUFFIX).o stack.c
+	clang $(CFLAGS) -c -o stack$(STACK_SUFFIX).o stack.c
 
 nonblocking$(NON_BLOCKING_SUFFIX).o: non_blocking.c
-	gcc $(CFLAGS) -c -o non_blocking$(NON_BLOCKING_SUFFIX).o non_blocking.c
+	clang $(CFLAGS) -c -o non_blocking$(NON_BLOCKING_SUFFIX).o non_blocking.c
 
 dist:
 	zip $(ARCHIVE) $(FILES)

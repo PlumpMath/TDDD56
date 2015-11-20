@@ -45,12 +45,10 @@ struct stack
 typedef struct stack stack_t;
 
 // Pushes an element in a thread-safe manner
-void stack_push(stack_t* stack, int value);
+void stack_push(stack_t* stack, stack_item_t* new_item);
 
 // Pops an element in a thread-safe manner
-int stack_pop(stack_t* stack);
-
-void stack_init();
+stack_item_t* stack_pop(stack_t* stack);
 
 
 /* Debug practice: check the boolean expression expr; if it computes to 0, print a warning message on standard error and exit */

@@ -46,14 +46,6 @@
 #endif
 #endif
 
-static stack_item_t pool[MAX_PUSH_POP];
-_Atomic static size_t cur;
-
-void
-stack_init()
-{
-	cur = 0;
-}
 
 void
 stack_check(stack_t* stack)
@@ -69,10 +61,7 @@ stack_check(stack_t* stack)
 #endif
 }
 
-void stack_push(stack_t* stack, int val) {
-	stack_item_t* new_item = &pool[cur++];
-	new_item->val = val;
-
+void stack_push(stack_t* stack, stack_item_t* new_item) {
 #if NON_BLOCKING == 0
 
 	pthread_mutex_lock(&stack->lock);
@@ -86,9 +75,6 @@ void stack_push(stack_t* stack, int val) {
 		new_item->prev = stack->head;
 	} while (!__sync_bool_compare_and_swap(&stack->head, new_item->prev, new_item));
 
-#else
-  /*** Optional ***/
-  // Implement a software CAS-based stack
 #endif
 
   // Debug practice: you can check if this operation results in a stack in a consistent check
@@ -97,10 +83,9 @@ void stack_push(stack_t* stack, int val) {
   // stack_check((stack_t*)1);
 }
 
-int stack_pop(stack_t* stack) {
+stack_item_t* stack_pop(stack_t* stack) {
 	stack_item_t* item;
 #if NON_BLOCKING == 0
-
 
 	pthread_mutex_lock(&stack->lock);
 	item = stack->head;
@@ -115,10 +100,7 @@ int stack_pop(stack_t* stack) {
 		item = __sync_val_compare_and_swap(&stack->head, old_head, old_head->prev);
 	}	while(item != old_head);
 
-#else
-  /*** Optional ***/
-  // Implement a software CAS-based stack
 #endif
 
-  return item->val;
+  return item;
 }
