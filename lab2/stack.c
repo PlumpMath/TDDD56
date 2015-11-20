@@ -84,12 +84,10 @@ void stack_push(stack_t* stack, int val)
 
 #elif NON_BLOCKING == 1
 	stack_item_t* new_item = &pool[cur++];
-	stack_item_t* old_head;
 	new_item->val = val;
 	do {
-		old_head = stack->head;
 		new_item->prev = stack->head;
-	} while (!__sync_bool_compare_and_swap(&stack->head, old_head, new_item));
+	} while (!__sync_bool_compare_and_swap(&stack->head, new_item->prev, new_item));
 
 
 #else
@@ -113,17 +111,16 @@ int stack_pop(stack_t* stack) {
 	val = item->val;
 	stack->head = item->prev;
 	pthread_mutex_unlock(&stack->lock);
-	//free(item);
 #elif NON_BLOCKING == 1
 	stack_item_t* item;
 	stack_item_t* old_head;
 	do {
 		old_head = stack->head;
-		item = __sync_val_compare_and_swap(&stack->head, old_head, stack->head->prev);
+		item = __sync_val_compare_and_swap(&stack->head, old_head, old_head->prev);
 	}	while(item != old_head);
 
 	val = item->val;
-	// free(item);
+
 	return val;
 
 #else
