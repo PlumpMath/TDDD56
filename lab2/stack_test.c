@@ -27,7 +27,6 @@
 #include <stdint.h>
 #include <time.h>
 #include <stddef.h>
-#include <unistd.h>
 
 #include "stack.h"
 #include "non_blocking.h"
@@ -145,9 +144,9 @@ void test_finalize() {
 
 void* test_push_safe_thread(void *arg) {
 	int* n = (int *)arg;
-	for(int i = 0; i < MAX_PUSH_POP; i++) {
+	for(int i = 0; i < MAX_PUSH_POP / NB_THREADS; i++) {
+		pthread_yield();
 		stack_push(stack, (*n) + 1);
-		printf("PUSHING: %d\n", (*n) + 1);
 	}
 
 	return NULL;
@@ -180,19 +179,17 @@ int test_push_safe() {
 
 	int sum2 = 0;
 	for(i = 0; i < NB_THREADS; i++) {
-		sum2 += (i+1) * MAX_PUSH_POP;
+		sum2 += (i+1) * (MAX_PUSH_POP / NB_THREADS);
 	}
 
 	int sum = 0;
 	while(stack->head != NULL) {
-		int popped = stack_pop(stack);
-		printf("POPPED: %d\n", popped);
-		sum += popped; 
+		sum += stack_pop(stack); 
 		if(sum > sum2) {
 			printf("%d should be equal to %d, to is getting bigger!\n", sum, sum2);
-			assert(sum == sum2);
 		}
 	}
+	assert(sum == sum2);
 
   // For now, this test always fails
   return 1;
