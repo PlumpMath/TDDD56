@@ -23,9 +23,12 @@
 
 #include <stdlib.h>
 #include <pthread.h>
+#include <stdatomic.h>
 
 #ifndef STACK_H
 #define STACK_H
+
+_Atomic int aba_detected;
 
 struct stack_item
 {

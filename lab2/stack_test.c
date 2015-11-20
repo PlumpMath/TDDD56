@@ -210,17 +210,40 @@ int test_pop_safe() {
 	return 1;
 }
 
+
 // 3 Threads should be enough to raise and detect the ABA problem
 #define ABA_NB_THREADS 3
 
-int
-test_aba()
-{
+void* thread_aba(void* nothing) {
+	for (int i = MAX_PUSH_POP / ABA_NB_THREADS - 7; i >= 0; i--) {
+		stack_item_t* out = stack_pop(stack);
+		stack_item_t* out2 = stack_pop(stack);
+		out2->val = -1;
+		stack_push(stack, out);
+		out2->val = 0;
+	}
+	return NULL;
+}
+
+int test_aba() {
 #if NON_BLOCKING == 1 || NON_BLOCKING == 2
-  int success, aba_detected = 0;
-  // Write here a test for the ABA problem
-  success = aba_detected;
-  return success;
+	aba_detected = 1;
+  pthread_t thread[ABA_NB_THREADS];
+  int i;
+
+	for (i = 0; i < MAX_PUSH_POP; i++){
+		stack_item_t* new_item = malloc(sizeof(stack_item_t));
+		new_item->val = i;
+		stack_push(stack, new_item);
+	}
+  for (i = 0; i < ABA_NB_THREADS; i++) {
+		pthread_create(&thread[i], NULL, &thread_aba, NULL);
+	}
+  for (i = 0; i < ABA_NB_THREADS; i++) {
+		pthread_join(thread[i], NULL);
+	}
+
+  return aba_detected;
 #else
   // No ABA is possible with lock-based synchronization. Let the test succeed.
   return 1;
