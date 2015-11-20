@@ -148,15 +148,11 @@ void* thread_push_safe(void* arg) {
 }
 
 int test_push_safe() {
-  pthread_attr_t attr;
   pthread_t thread[NB_THREADS];
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
   int i;
 
   for (i = 0; i < NB_THREADS; i++) {
-		pthread_create(&thread[i], &attr, &thread_push_safe, NULL);
+		pthread_create(&thread[i], NULL, &thread_push_safe, NULL);
 	}
   for (i = 0; i < NB_THREADS; i++) {
 		pthread_join(thread[i], NULL);
@@ -190,17 +186,13 @@ void* thread_pop_safe(void* arg) {
 }
 
 int test_pop_safe() {
-  pthread_attr_t attr;
   pthread_t thread[NB_THREADS];
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
   int i;
 
 	stack_init();
 
   for (i = 0; i < NB_THREADS; i++) {
-		pthread_create(&thread[i], &attr, &thread_pop_safe, NULL);
+		pthread_create(&thread[i], NULL, &thread_pop_safe, NULL);
 	}
   for (i = 0; i < NB_THREADS; i++) {
 		pthread_join(thread[i], NULL);
@@ -222,7 +214,7 @@ test_aba()
   success = aba_detected;
   return success;
 #else
-  // No ABA is possible with lock-based synchronization. Let the test succeed only
+  // No ABA is possible with lock-based synchronization. Let the test succeed.
   return 1;
 #endif
 }
