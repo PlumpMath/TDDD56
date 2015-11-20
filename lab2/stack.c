@@ -69,13 +69,11 @@ stack_check(stack_t* stack)
 #endif
 }
 
-void stack_push(stack_t* stack, int val)
-{
+void stack_push(stack_t* stack, int val) {
+	stack_item_t* new_item = &pool[cur++];
+	new_item->val = val;
+
 #if NON_BLOCKING == 0
-  // Implement a lock_based stack
-	// stack_item_t *item = malloc(sizeof(stack_item_t));
-	stack_item_t* item = &pool[cur++];
-	item->val = val;
 
 	pthread_mutex_lock(&stack->lock);
 	item->prev = stack->head;
@@ -83,12 +81,10 @@ void stack_push(stack_t* stack, int val)
 	pthread_mutex_unlock(&stack->lock);
 
 #elif NON_BLOCKING == 1
-	stack_item_t* new_item = &pool[cur++];
-	new_item->val = val;
+
 	do {
 		new_item->prev = stack->head;
 	} while (!__sync_bool_compare_and_swap(&stack->head, new_item->prev, new_item));
-
 
 #else
   /*** Optional ***/
@@ -102,31 +98,27 @@ void stack_push(stack_t* stack, int val)
 }
 
 int stack_pop(stack_t* stack) {
-	int val;
-
+	stack_item_t* item;
 #if NON_BLOCKING == 0
-  // Implement a lock_based stack
+
+
 	pthread_mutex_lock(&stack->lock);
-	stack_item_t *item = stack->head;
-	val = item->val;
+	item = stack->head;
 	stack->head = item->prev;
 	pthread_mutex_unlock(&stack->lock);
+
 #elif NON_BLOCKING == 1
-	stack_item_t* item;
+
 	stack_item_t* old_head;
 	do {
 		old_head = stack->head;
 		item = __sync_val_compare_and_swap(&stack->head, old_head, old_head->prev);
 	}	while(item != old_head);
 
-	val = item->val;
-
-	return val;
-
 #else
   /*** Optional ***/
   // Implement a software CAS-based stack
 #endif
 
-  return val;
+  return item->val;
 }
