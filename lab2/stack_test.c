@@ -206,8 +206,6 @@ int test_pop_safe() {
 		pthread_join(thread[i], NULL);
 	}
 
-	printf("%d\n", pop_sum);
-
 	assert(pop_sum == 120 * 241 * NB_THREADS);
 	return 1;
 }
