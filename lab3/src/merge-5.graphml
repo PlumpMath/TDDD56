@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns
+         http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+<!-- Created by igraph -->
+  <key id="g_name" for="graph" attr.name="name" attr.type="string"/>
+  <key id="g_deadline" for="graph" attr.name="deadline" attr.type="string"/>
+  <key id="v_name" for="node" attr.name="name" attr.type="string"/>
+  <key id="v_module" for="node" attr.name="module" attr.type="string"/>
+  <key id="v_workload" for="node" attr.name="workload" attr.type="double"/>
+  <key id="v_max_width" for="node" attr.name="max_width" attr.type="string"/>
+  <key id="v_efficiency" for="node" attr.name="efficiency" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <data key="g_name">pipelined_merge</data>
+    <!-- <data key="g_deadline">exprtk:max(tau) / max(F)</data> -->
+    <data key="g_deadline">0</data>
+    <node id="n0">
+      <data key="v_name">task_1</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">32</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+
+    <node id="n1">
+      <data key="v_name">task_2</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">16</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n2">
+      <data key="v_name">task_3</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">16</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+
+    <node id="n3">
+      <data key="v_name">task_4</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">8</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n4">
+      <data key="v_name">task_5</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">8</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n5">
+      <data key="v_name">task_6</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">8</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n6">
+      <data key="v_name">task_7</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">8</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+
+    <node id="n7">
+      <data key="v_name">task_8</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">4</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n8">
+      <data key="v_name">task_9</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">4</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n9">
+      <data key="v_name">task_10</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">4</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n10">
+      <data key="v_name">task_11</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">4</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n11">
+      <data key="v_name">task_12</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">4</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n12">
+      <data key="v_name">task_13</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">4</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n13">
+      <data key="v_name">task_14</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">2</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+    <node id="n14">
+      <data key="v_name">task_15</data>
+      <data key="v_module">merge</data>
+      <data key="v_workload">2</data>
+      <data key="v_max_width">1</data>
+      <data key="v_efficiency">exprtk: p == 1 ? 1 : p &lt;= W ? 1 - 0.3 * ((p * p) / (W * W)) : 1e-06 </data>
+    </node>
+
+    <edge source="n14" target="n6"/>
+    <edge source="n13" target="n6"/>
+    <edge source="n12" target="n5"/>
+    <edge source="n11" target="n5"/>
+    <edge source="n10" target="n4"/>
+    <edge source="n9" target="n4"/>
+    <edge source="n8" target="n3"/>
+    <edge source="n7" target="n3"/>
+
+    <edge source="n6" target="n2"/>
+    <edge source="n5" target="n2"/>
+    <edge source="n4" target="n1"/>
+    <edge source="n3" target="n1"/>
+
+    <edge source="n2" target="n0"/>
+    <edge source="n1" target="n0"/>
+  </graph>
+</graphml>

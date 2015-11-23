@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schedule name="Generated from Algebra" appname="Generated from Algebra">
+ <core coreid="1">
+  <task name="task_1" start="0.000000" frequency="533000.000000" width="1.000000" workload="32.000000"/>
+  <task name="task_2" start="0.000001" frequency="533000.000000" width="1.000000" workload="16.000000"/>
+  <task name="task_3" start="0.000002" frequency="533000.000000" width="1.000000" workload="16.000000"/>
+  <task name="task_4" start="0.000003" frequency="533000.000000" width="1.000000" workload="8.000000"/>
+  <task name="task_5" start="0.000004" frequency="533000.000000" width="1.000000" workload="8.000000"/>
+  <task name="task_6" start="0.000005" frequency="533000.000000" width="1.000000" workload="8.000000"/>
+  <task name="task_7" start="0.000006" frequency="533000.000000" width="1.000000" workload="8.000000"/>
+  <task name="task_8" start="0.000007" frequency="533000.000000" width="1.000000" workload="4.000000"/>
+  <task name="task_9" start="0.000008" frequency="533000.000000" width="1.000000" workload="4.000000"/>
+  <task name="task_10" start="0.000009" frequency="533000.000000" width="1.000000" workload="4.000000"/>
+  <task name="task_11" start="0.000010" frequency="533000.000000" width="1.000000" workload="4.000000"/>
+  <task name="task_12" start="0.000011" frequency="533000.000000" width="1.000000" workload="4.000000"/>
+  <task name="task_13" start="0.000012" frequency="533000.000000" width="1.000000" workload="4.000000"/>
+  <task name="task_14" start="0.000013" frequency="533000.000000" width="1.000000" workload="2.000000"/>
+  <task name="task_15" start="0.000014" frequency="533000.000000" width="1.000000" workload="2.000000"/>
+ </core>
+</schedule>

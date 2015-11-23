@@ -1,0 +1,55 @@
+#!/bin/bash
+
+## Compile settings
+compile=(nb_threads pattern size value input_instance)
+## Number of threads: reduce to 1 to 4 threads if you work in Southfork
+nb_threads="seq 2 3 4 5 6"
+## Input data pattern
+pattern="uniform-random increasing decreasing constant"
+## Input data size: from 16 to 64 Mi integers
+size="`for i in 0 2 4; do echo $(( (2 ** $i) * 1024 * 1024)); done`"
+## Value for constant patterns
+value="123456"
+## Number of input sets for each pattern and size
+input_instance="`seq 1 2`"
+
+## Runtime settings
+run=(implementation run_instance)
+## Classic parallel of Drake streaming implementation
+implementation="parallel drake"
+## Number of runs for each implementation, input pattern and size
+run_instance="`seq 1 2`"
+
+## Data produce each run
+output_columns="time"
+
+## Prevent multiple compilation and runs of identical problem instance, such as non-constant input with different input values or several input instance of the same constant value
+restrict='((match(pattern, "^constant$") && match(input_instance, "^1$")) || (match(pattern, "^uniform-random$") && match(value, "^'$(echo $value | tr \\\t ' ' | tr -s ' ' | cut -f 1 -d ' ')'$")) || (match(input_instance, "^1$") && match(value, "^'$(echo $value | tr \\\t ' ' | tr -s ' ' | cut -f 1 -d ' ')'$")))'
+
+if [ "$1" == "compile" ]
+then
+	## Remove existing binary variants we want to build
+	for i in $implementation
+	do
+		for j in $nb_threads
+		do
+
+			## Transform "seq" into 0 number of threads
+			p=$(if [ "$j" == "seq" ]; then echo 0; else echo $j; fi)
+			## Transform 0 number of threads into 1 for Drake
+			drake_p=$(if [ "$p" == "0" ]; then echo 1; else echo $p; fi)
+			## Add a prefix p to nb-threads for nicer filename modifier in final executables
+			nb=$(if [ "$j" == "seq" ]; then echo $j; else echo p$j; fi)
+
+			if [ -f "src/$nb-$i-sort" ]
+			then
+				rm -f src/$nb-$i-sort
+			fi
+		done
+	done
+fi
+
+labels_nb_threads="seq: Serial"
+labels_pattern="uniform-random: Random (uniform); increasing: Increasing; decreasing: Decreasing; constant: Constant"
+labels_implementation="drake: Drake; parallel: Parallel"
+labels_columns="time: Time"

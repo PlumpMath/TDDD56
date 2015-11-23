@@ -1,0 +1,37 @@
+#!/bin/bash
+
+nb_threads=$1
+pattern=$2
+size=$3
+value=$4
+input_instance=$5
+
+## Transform "seq" into 0 number of threads
+p=$(if [ "$nb_threads" == "seq" ]; then echo 0; else echo $nb_threads; fi)
+## Transform 0 number of threads into 1 for Drake
+drake_p=$(if [ "$p" == "0" ]; then echo 1; else echo $p; fi)
+## Add a procefix p to nb-threads for nicer filename modifier in final executables
+nb_threads=$(if [ "$nb_threads" == "seq" ]; then echo $nb_threads; else echo p$nb_threads; fi)
+
+## Build executables if not already built
+if [ ! -f src/$nb_threads-parallel-sort ] || [ ! -f src/$nb_threads-drake-sort ]
+then
+	make clean NB_THREADS=$p VARIANT_parallel-sort=$nb_threads- DRAKE_PLATFORM=platform-$drake_p.dat DRAKE_SCHEDULE=schedule-$drake_p.xml DRAKE_TASKGRAPH=merge-$drake_p.graphml VARIANT_drake-sort=$nb_threads- >/dev/null 2>&1
+	make NB_THREADS=$p VARIANT_parallel-sort=$nb_threads- DRAKE_PLATFORM=platform-$drake_p.dat DRAKE_SCHEDULE=schedule-$drake_p.xml DRAKE_TASKGRAPH=merge-$drake_p.graphml VARIANT_drake-sort=$nb_threads- >/dev/null 2>&1
+fi
+
+## Input data filename corresponding to the compile instance
+if [ -d /scratch ]
+then
+	prefix=/scratch
+else
+	prefix=/tmp
+fi
+prefix=$prefix/$USER/
+mkdir -p $prefix
+data_filename=$prefix/input-$pattern-$size$(if [ "$pattern" == "constant" ]; then echo -v$value; else if [ "$pattern" == "uniform-random" ]; then echo -i$input_instance; fi; fi).bin
+
+if [ ! -f "$data_filename" ]
+then
+	src/generate --$pattern $(if [ "$pattern" == "constant" ]; then echo $value; fi) --size $size --output $data_filename
+fi

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+## Compile settings
+nb_threads=$1
+pattern=$2
+size=$3
+value=$4
+input_instance=$5
+
+## Run settings
+implementation=$6
+run_instance=$7
+
+## Transform "seq" into 0 number of threads
+p=$(if [ "$nb_threads" == "seq" ]; then echo 0; else echo $nb_threads; fi)
+## Transform 0 number of threads into 1 for Drake
+drake_p=$(if [ "$p" == "0" ]; then echo 1; else echo $p; fi)
+## Add a procefix p to nb-threads for nicer filename modifier in final executables
+nb_threads=$(if [ "$nb_threads" == "seq" ]; then echo $nb_threads; else echo p$nb_threads; fi)
+
+## Input data filename corresponding to the compile instance
+if [ -d /scratch ]
+then
+	prefix=/scratch
+else
+	prefix=/tmp
+fi
+prefix=$prefix/$USER/
+mkdir -p $prefix
+data_filename=$prefix/input-$pattern-$size$(if [ "$pattern" == "constant" ]; then echo -v$value; else if [ "$pattern" == "uniform-random" ]; then echo -i$input_instance; fi; fi).bin
+
+## Check if input filename exists
+if [ ! -f "$data_filename" ]
+then
+	echo "Cannot find input file \"$data_filename\". Run \"freja compile\" and try again". >&2
+	exit 1
+fi
+
+if [ ! -f "src/$nb_threads-$implementation-sort" ]
+then
+	echo "Cannot find executable \"src/$nb_threads-$implementation-sort\". Run \"freja compile\" and try again". >&2
+	exit 1
+fi
+
+## Run binary
+src/$nb_threads-$implementation-sort $data_filename 2> /dev/null
+
