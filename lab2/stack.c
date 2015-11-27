@@ -76,8 +76,8 @@ void stack_push(stack_t* stack, int val) {
 #if NON_BLOCKING == 0
 
 	pthread_mutex_lock(&stack->lock);
-	item->prev = stack->head;
-	stack->head = item;
+	new_item->prev = stack->head;
+	stack->head = new_item;
 	pthread_mutex_unlock(&stack->lock);
 
 #elif NON_BLOCKING == 1
