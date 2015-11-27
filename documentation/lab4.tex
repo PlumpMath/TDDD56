@@ -1,0 +1,49 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+\usepackage{listings}
+\usepackage{hyperref}
+\lstset{
+language=C,
+basicstyle=\footnotesize
+}
+\begin{document}
+
+\section{Lab 3}
+
+
+\begin{itemize}
+\item \textit{How many cores will simple.cu use, max, as written? How many SMs?}
+
+  It will at maximum use 16 * 1 cudacores. It will run on one Streaming Multiprocessor (SM).
+
+\item \textit{Is the calculated square root identical to what the CPU calculates?}
+
+  It is not identical:
+
+  \begin{lstlisting}
+    0 0
+    1 1
+    1.4142136573791504 1.4142135623730951
+    1.732050895690918  1.7320508075688772
+    2 2
+    2.2360682487487793 2.2360679774997898
+    2.4494898319244385 2.4494897427831779
+    2.6457514762878418 2.6457513110645907
+    2.8284273147583008 2.8284271247461903
+    3.0000002384185791 3
+    3.1622776985168457 3.1622776601683795
+    3.3166248798370361 3.3166247903553998
+    3.4641017913818359 3.4641016151377544
+    3.6055512428283691 3.6055512754639891
+    3.7416574954986572 3.7416573867739413
+    3.872983455657959  3.872983346207417
+  \end{lstlisting}
+
+  We can note that the GPU output is identical to that of our CPU, and Wolfram Alpah, until the 6th decimal.
+
+\end{itemize}
+
+\end{document}
