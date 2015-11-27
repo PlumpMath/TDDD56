@@ -1,0 +1,29 @@
+## Package configuration
+CONFIG = RELEASE
+
+## Default number of threads
+NB_THREADS = 1
+
+## List of C++ files that hold your implementation of parallel sort
+## Files must have etension .cpp
+SORT_CXX_FILES = sort.cpp
+## List of C files that hold your implementation of parallel sort
+## Files must have etension .c
+SORT_CC_FILES = 
+
+## Additional compiler flag to pass to C-compiled sources
+CFLAGS = 
+## Additional compiler flags to pass to C++-compiled sources
+CXXFLAGS = 
+## Additional linker flags
+CXX_LDFLAGS =  
+
+## Number of threads to compile
+NB_THREADS = 1
+
+## Task graph description
+DRAKE_TASKGRAPH = merge.graphml
+## Drake target paltform description
+DRAKE_PLATFORM = platform.dat
+## Drake schedule to use
+DRAKE_SCHEDULE = ## Let lpt generate a schedule
