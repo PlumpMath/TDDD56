@@ -3,16 +3,6 @@
 
 #include <stdio.h>
 
-__global__
-void add_matrix(float *a, float *b, float *c, int N) {
-	int index;
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
-			index = i + j*N;
-			c[index] = a[index] + b[index];
-		}
-	}
-}
 
 void printDeviceProperties(){
 	cudaDeviceProp prop;
@@ -26,17 +16,28 @@ void printDeviceProperties(){
 				 2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
 }
 
+
+__global__
+void add_matrix(float *a, float *b, float *c, int N) {
+	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	c[index] = a[index] + b[index];
+}
+
+
 int main() {
 	printDeviceProperties();
-	const int N = 8;
+	const int N = 16;
 
 	float a[N*N];
 	float b[N*N];
 	float c[N*N];
-	const int size = N*N*sizeof(float);
-	cudaMalloc((void**)&a, size);
-	cudaMalloc((void**)&b, size);
-	cudaMalloc((void**)&c, size);
+	float* ad;
+	float* bd;
+	float* cd;
+	const int size = N * N * sizeof(float);
+	cudaMalloc((void**)&ad, size);
+	cudaMalloc((void**)&bd, size);
+	cudaMalloc((void**)&cd, size);
 
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < N; j++)	{
@@ -44,11 +45,14 @@ int main() {
 			b[i+j*N] = (float)j / N;
 		}
 	}
+	cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
+	cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
 
-	dim3 dimBlock(N, N );
-	dim3 dimGrid(1, 1 );
-	add_matrix<<<dimBlock, dimGrid>>>(a, b, c, N);
+	dim3 dimBlock(N, N);
+	dim3 dimGrid(8, 8);
+	add_matrix<<<dimBlock, dimGrid>>>(ad, bd, cd, N);
 	cudaThreadSynchronize();
+	cudaMemcpy(c, cd, size, cudaMemcpyDeviceToHost);
 
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < N; j++) {

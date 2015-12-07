@@ -11,7 +11,7 @@ basicstyle=\footnotesize
 }
 \begin{document}
 
-\section{Lab 3}
+\section{Lab 4}
 
 
 \begin{itemize}
@@ -46,8 +46,13 @@ basicstyle=\footnotesize
 
 \item \textit{Should we assume that this is always the case?}
 
-  Well yes, we can assume that the results will always have the same precision.
+  Well yes, we can assume that the results will always have the same precision. And we can assume that anything beyond that precision will be incorrect.
 
+\item \textit{How do you calculate the index in the array, using 2-dimensional blocks?}
+
+  \begin{lstlisting}
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+  \end{ltslisting}
 \end{itemize}
 
 \end{document}

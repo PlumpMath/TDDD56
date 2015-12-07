@@ -19,13 +19,13 @@ int main()
 	float *c = new float[N];
 	float *cd;
 	const int size = N*sizeof(float);
+	cudaMalloc((void**)&cd, size);
 
-	cudaMalloc( (void**)&cd, size );
 	dim3 dimBlock( blocksize, 1 );
 	dim3 dimGrid( 1, 1 );
 	simple<<<dimGrid, dimBlock>>>(cd);
 	cudaThreadSynchronize();
-	cudaMemcpy( c, cd, size, cudaMemcpyDeviceToHost );
+	cudaMemcpy(c, cd, size, cudaMemcpyDeviceToHost);
 	cudaFree( cd );
 
 	for (int i = 0; i < N; i++){
