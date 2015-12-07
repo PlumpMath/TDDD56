@@ -19,14 +19,20 @@ void printDeviceProperties(){
 
 __global__
 void add_matrix(float *a, float *b, float *c, int N) {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
+	int indexX = blockIdx.x * blockDim.x + threadIdx.x;
+	int indexY = blockIdx.y * blockDim.y + threadIdx.y;
+	int index = indexY * N + indexX;
 	c[index] = a[index] + b[index];
 }
 
 
 int main() {
 	printDeviceProperties();
-	const int N = 16;
+	const int N = 512;
+
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
 
 	float a[N*N];
 	float b[N*N];
@@ -48,11 +54,19 @@ int main() {
 	cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
 
-	dim3 dimBlock(N, N);
-	dim3 dimGrid(8, 8);
+	int gridDim = 8;
+	dim3 dimBlock(N/gridDim, N/gridDim);
+	dim3 dimGrid(gridDim, gridDim);
+	cudaEventRecord(start);
 	add_matrix<<<dimBlock, dimGrid>>>(ad, bd, cd, N);
+	cudaEventRecord(stop);
 	cudaThreadSynchronize();
 	cudaMemcpy(c, cd, size, cudaMemcpyDeviceToHost);
+
+
+	cudaEventSynchronize(stop);
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
 
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < N; j++) {
@@ -60,4 +74,6 @@ int main() {
 		}
 		printf("\n");
 	}
+
+	printf("Execution took %f milliseconds.\n", milliseconds);
 }

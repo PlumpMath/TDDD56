@@ -50,9 +50,17 @@ basicstyle=\footnotesize
 
 \item \textit{How do you calculate the index in the array, using 2-dimensional blocks?}
 
+  Using the following code, inspired by an image from the internet with the title Accessing Matrices in Linear Memory.
+
   \begin{lstlisting}
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int indexX = blockIdx.x * blockDim.x + threadIdx.x;
+    int indexY = blockIdx.y * blockDim.y + threadIdx.y;
+    int index = indexY * N + indexX;
   \end{ltslisting}
+
+
+\item \textit{}
+
 \end{itemize}
 
 \end{document}
