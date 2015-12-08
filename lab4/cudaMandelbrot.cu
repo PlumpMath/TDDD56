@@ -37,6 +37,9 @@ unsigned char	*devicePixels;
 int maxiter = 20;
 MYFLOAT offsetx = -200, offsety = 0, zoom = 0;
 MYFLOAT scale = 1.5;
+int imageWidth;
+int imageHeight;
+
 
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -52,12 +55,23 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 // Init image data
 void initBitmap(int width, int height) {
+	imageWidth = width;
+	imageHeight = height;
+
 	if (pixels)
 		free(pixels);
+
+	if (devicePixels) {
+		gpuErrchk( cudaFree(devicePixels) );
+		printf("Freeing device pixels.\n");
+	}
 
 	int size = width * height * 4 * sizeof(unsigned char);
 	pixels = (unsigned char*)malloc(size);
 	gpuErrchk( cudaMalloc((void**)&devicePixels, size) );
+	gpuErrchk( cudaDeviceSynchronize() );
+
+	printf("Bitmap initialized.\n");
 }
 
 
@@ -96,9 +110,9 @@ void clearData(unsigned char* c) {
 
 
 __device__
-int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale) {
-	MYFLOAT jx = scale * (MYFLOAT)(DIM/2 - x + offsetx/scale)/(DIM/2);
-	MYFLOAT jy = scale * (MYFLOAT)(DIM/2 - y + offsety/scale)/(DIM/2);
+int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale, int imageWidth, int imageHeight) {
+	MYFLOAT jx = scale * (MYFLOAT)(imageWidth/2 - x + offsetx/scale)/(imageWidth/2);
+	MYFLOAT jy = scale * (MYFLOAT)(imageHeight/2 - y + offsety/scale)/(imageHeight/2);
 
 	cuComplex c(jx, jy);
 	cuComplex a(jx, jy);
@@ -115,10 +129,11 @@ int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFL
 
 
 __global__
-void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale) {
+void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale,
+		int imageWidth, int imageHeight) {
 	int indexX = blockIdx.x * blockDim.x + threadIdx.x;
 	int indexY = blockIdx.y * blockDim.y + threadIdx.y;
-	int index = indexY * DIM + indexX;
+	int index = indexY * imageWidth + indexX;
 
 	// Calculate the value at that position;
 	// int fractalValue = mandelbrot(indexX, indexY, maxiter, offsetx, offsety, scale);
@@ -199,15 +214,19 @@ void draw() {
 	dim3 dimBlock(blockSize, blockSize);
 	dim3 dimGrid(imageSize / blockSize, imageSize / blockSize);
 
-	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter, offsetx, offsety, scale);
-	gpuErrchk( cudaPeekAtLastError() );
-	gpuErrchk( cudaDeviceSynchronize() );
-	gpuErrchk( cudaMemcpy(pixels, devicePixels, size, cudaMemcpyDeviceToHost) );
+	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter,
+																				offsetx, offsety, scale,
+																				imageWidth, imageHeight);
+	gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaDeviceSynchronize());
+	gpuErrchk(cudaMemcpy(pixels, devicePixels,
+												size, cudaMemcpyDeviceToHost));
 
-	// Dump the whole picture onto the screen. (Old-style OpenGL but without lots of geometry that doesn't matter so much.)
-	glClearColor( 0.0, 0.0, 0.0, 1.0 );
-	glClear(GL_COLOR_BUFFER_BIT );
-	glDrawPixels(DIM, DIM, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+	// Dump the whole picture onto the screen.
+	// (Old-style OpenGL but without lots of geometry that doesn't matter so much.)
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDrawPixels(imageWidth, imageHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
 
 	if (print_help)
 		PrintHelp();
