@@ -65,8 +65,8 @@ void initBitmap(int width, int height) {
 
 	int size = width * height * 4 * sizeof(unsigned char);
 	pixels = (unsigned char*)malloc(size);
-	gpuErrchk( cudaMalloc((void**)&devicePixels, size) );
-	gpuErrchk( cudaDeviceSynchronize() );
+	gpuErrchk(cudaMalloc((void**)&devicePixels, size));
+	gpuErrchk(cudaDeviceSynchronize());
 
 	printf("Bitmap initialized.\n");
 }
@@ -194,14 +194,14 @@ void PrintHelp() {
 
 void draw() {
 	const int blockSize = 8;
-	const int imageSize = DIM * DIM;
+	const int imageSize = imageHeight * imageWidth;
 	const int size = imageSize * 4 * sizeof(unsigned char);
 	dim3 dimBlock(blockSize, blockSize);
 	dim3 dimGrid(imageWidth / blockSize, imageHeight / blockSize);
 
 	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter,
-			offsetx, offsety, scale,
-			imageWidth, imageHeight);
+                                        offsetx, offsety, scale,
+                                        imageWidth, imageHeight);
 	gpuErrchk(cudaPeekAtLastError());
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(pixels, devicePixels, size, cudaMemcpyDeviceToHost));
