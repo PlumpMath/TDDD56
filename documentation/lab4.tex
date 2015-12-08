@@ -163,20 +163,52 @@ basicstyle=\footnotesize
 
 \item \textit{What were the main changes in order to make the Mandelbrot run in CUDA?}
 
+We had to remove a lot of global variables. You shouldn't use global variables Ingemar, they're the bane of your existence!
+
 
 \item \textit{How many blocks and threads did you use?}
+  A lot.
+
+  \begin{lstlisting}
+    const int blockSize = 32;
+    dim3 dimBlock(blockSize, blockSize);
+    dim3 dimGrid(imageWidth / blockSize, imageHeight / blockSize);
+  \end{lstlisting}
+
+  In the above example we have 32 * 32, i.e. 1024, threads in each block. But it's possible to vary that.
 
 
 \item \textit{When you use the Complex class, what modifier did you have to use on the methods?}
 
+  We used the __device__ modifier on the methods.
+
 
 \item \textit{What performance did you get? How does that compare to the CPU solution?}
+
+  Below are two samples of the application running.
+
+  \begin{lstlisting}
+    GPU frame took 17.044000 milliseconds for 1920x1080.
+    GPU frame took 12.030000 milliseconds for 1920x1080.
+    CPU frame took 760.114000 milliseconds for 1920x1080.
+    CPU frame took 685.218000 milliseconds for 1920x1080.
+  \end{lstlisting}
+
+  So perhaps somewhere between one or two magnitudes of improvement.
 
 
 \item \textit{What performance did you get with float vs double precision?}
 
+  We saw no difference in performance between double and floats on the CPU, we assume that this is because we're running on 64 bit systems.
+
+  On the GPU the average run time over 50 runs was 34.18ms with floats. Using doubles instead we got an average of 16.84ms. So somewhere around a factor of two.
+
 
 \item \textit{In Lab 1, load balancing was an important issue. Is that an issue here? Why/why not?}
+
+  It's not as big of an issue here since we only ever have to wait for the execution of one heavy pixel instead of, as in Lab 1, the execution of a whole set of heavy pixels. And by heavy pixels we mean those that have the longest execution time, those which run for a lot of iterations.
+
+  So to rephrase: In lab one the majority of heavy pixels could be put on one thread. Here each thread is only responsible for one pixel.
 
 \end{itemize}
 
