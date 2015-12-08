@@ -39,6 +39,7 @@ int main() {
 	printDeviceProperties();
 	for (unsigned int i = 5; i < 12; i++) {
 		const int N = pow(2, i);
+		const int blockSize = pow(2, 5);
 
 		cudaEvent_t start, stop;
 		cudaEventCreate(&start);
@@ -64,7 +65,6 @@ int main() {
 		cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
 		cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
 
-		const int blockSize = 32;
 		dim3 dimBlock(blockSize, blockSize);
 		dim3 dimGrid(N/blockSize, N/blockSize);
 		cudaEventRecord(start);

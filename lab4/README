@@ -1,0 +1,3 @@
+In order to compare the output of matrix_gpu and matrix_cpu run the following:
+
+make matrix_gpu && ./matrix_gpu.o > gpu.out && make matrix_cpu && ./matrix_cpu.o > cpu.out && diff gpu.out cpu.out
