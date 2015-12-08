@@ -2,7 +2,7 @@
 // gcc matrix_cpu.c -o matrix_cpu -std=c99
 
 #include <stdio.h>
-
+#include <math.h>
 
 void printDeviceProperties(){
 	cudaDeviceProp prop;
@@ -25,55 +25,68 @@ void add_matrix(float *a, float *b, float *c, int N) {
 	c[index] = a[index] + b[index];
 }
 
+// https://www.youtube.com/watch?v=fu0gbHnRGYk
+__global__
+void clear_my_bitch_out(float *c, int N) {
+	int indexX = blockIdx.x * blockDim.x + threadIdx.x;
+	int indexY = blockIdx.y * blockDim.y + threadIdx.y;
+	int index = indexY * N + indexX;
+	c[index] = 0;
+}
+
 
 int main() {
 	printDeviceProperties();
-	const int N = 1024;
+	for (unsigned int i = 4; i < 12; i++) {
+		const int N = pow(2, i);
 
-	cudaEvent_t start, stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
+		cudaEvent_t start, stop;
+		cudaEventCreate(&start);
+		cudaEventCreate(&stop);
 
-	float* a = new float[N*N];
-	float* b = new float[N*N];
-	float* c = new float[N*N];
-	float* ad;
-	float* bd;
-	float* cd;
-	const int size = N * N * sizeof(float);
-	cudaMalloc((void**)&ad, size);
-	cudaMalloc((void**)&bd, size);
-	cudaMalloc((void**)&cd, size);
+		float* a = new float[N*N];
+		float* b = new float[N*N];
+		float* c = new float[N*N];
+		float* ad;
+		float* bd;
+		float* cd;
+		const int size = N * N * sizeof(float);
+		cudaMalloc((void**)&ad, size);
+		cudaMalloc((void**)&bd, size);
+		cudaMalloc((void**)&cd, size);
 
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++)	{
-			a[i+j*N] = 10 + i;
-			b[i+j*N] = (float)j / N;
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++)	{
+				a[i+j*N] = 10 + i;
+				b[i+j*N] = (float)j / N;
+			}
 		}
-	}
-	cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
-	cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
+		cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
+		cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
 
-	int gridDim = 8;
-	dim3 dimBlock(N/gridDim, N/gridDim);
-	dim3 dimGrid(gridDim, gridDim);
-	cudaEventRecord(start);
-	add_matrix<<<dimBlock, dimGrid>>>(ad, bd, cd, N);
-	cudaEventRecord(stop);
-	cudaThreadSynchronize();
-	cudaMemcpy(c, cd, size, cudaMemcpyDeviceToHost);
+		int gridDim = 8;
+		dim3 dimBlock(N/gridDim, N/gridDim);
+		dim3 dimGrid(gridDim, gridDim);
+		cudaEventRecord(start);
+		add_matrix<<<dimBlock, dimGrid>>>(ad, bd, cd, N);
+		cudaEventRecord(stop);
+		cudaThreadSynchronize();
+		cudaMemcpy(c, cd, size, cudaMemcpyDeviceToHost);
 
+		cudaEventSynchronize(stop);
+		float milliseconds = 0;
+		cudaEventElapsedTime(&milliseconds, start, stop);
 
-	cudaEventSynchronize(stop);
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, start, stop);
-
-	for (int i = 0; i < N; i++) {
-		for (int j = 0; j < N; j++) {
-			printf("%0.2f ", c[i+j*N]);
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				printf("%0.2f ", c[i+j*N]);
+			}
+			printf("\n");
 		}
-		printf("\n");
-	}
+		printf("GPU execution took %f milliseconds for %d.\n", milliseconds, N);
 
-	printf("GPU execution took %f milliseconds.\n", milliseconds);
+		// Try to clean up everything on the GPU, and do it twice!
+		clear_my_bitch_out<<<dimGrid, dimBlock>>>(cd, N);
+		cudaDeviceReset();
+	}
 }

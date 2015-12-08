@@ -2,6 +2,7 @@
 // gcc matrix_cpu.c -o matrix_cpu -std=c99
 
 #include <stdio.h>
+#include <math.h>
 
 #include "milli.h"
 
@@ -17,28 +18,30 @@ void add_matrix(float *a, float *b, float *c, int N) {
 }
 
 int main() {
-	const int N = 1024;
+	for (unsigned int i = 4; i < 12; i++) {
+		const int N = pow(2, i);
 
-	float* a = new float[N*N];
-	float* b = new float[N*N];
-	float* c = new float[N*N];
+		float* a = new float[N*N];
+		float* b = new float[N*N];
+		float* c = new float[N*N];
 
-	for (int i = 0; i < N; i++)
-		for (int j = 0; j < N; j++)
-		{
-			a[i+j*N] = 10 + i;
-			b[i+j*N] = (float)j / N;
-		}
-	ResetMilli();
-	add_matrix(a, b, c, N);
-	printf("CPU took %f milliseconds.\n", (double)GetMicroseconds()/1000.0);
+		for (int i = 0; i < N; i++)
+			for (int j = 0; j < N; j++)
+				{
+					a[i+j*N] = 10 + i;
+					b[i+j*N] = (float)j / N;
+				}
+		ResetMilli();
+		add_matrix(a, b, c, N);
+		printf("CPU took %f milliseconds for %d.\n", (double)GetMicroseconds()/1000.0, N);
 
-	if(1){
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < N; j++)	{
-				printf("%0.2f ", c[i+j*N]);
+		if(1){
+			for (int i = 0; i < N; i++) {
+				for (int j = 0; j < N; j++)	{
+					printf("%0.2f ", c[i+j*N]);
+				}
+				printf("\n");
 			}
-			printf("\n");
 		}
 	}
 }
