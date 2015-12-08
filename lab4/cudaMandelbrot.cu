@@ -24,21 +24,34 @@
 #include <stdlib.h>
 #include <math.h>
 
+
+// Select precision here! float or double!
+#define MYFLOAT float
+#define DIM 512
+
+
+// Image data
+unsigned char	*pixels = NULL;
+unsigned char	*devicePixels;
+// User controlled parameters
+int maxiter = 20;
+MYFLOAT offsetx = -200, offsety = 0, zoom = 0;
+MYFLOAT scale = 1.5;
+int imageWidth;
+int imageHeight;
+
+
+
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
-   if (code != cudaSuccess) 
+   if (code != cudaSuccess)
    {
          fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
          if (abort) exit(code);
       }
 }
 
-// Image data
-int imageWidth;
-int imageHeight;
-unsigned char	*pixels = NULL;
-unsigned char	*devicePixels;
 
 // Init image data
 void initBitmap(int width, int height) {
@@ -61,15 +74,6 @@ void initBitmap(int width, int height) {
 	printf("Bitmap initialized.\n");
 }
 
-#define DIM 128
-
-// Select precision here! float or double!
-#define MYFLOAT float
-
-// User controlled parameters
-int maxiter = 20;
-MYFLOAT offsetx = -200, offsety = 0;
-MYFLOAT scale = 1.5;
 
 // Complex number class
 struct cuComplex {
@@ -95,6 +99,16 @@ struct cuComplex {
 	}
 };
 
+
+__global__
+void clearData(unsigned char* c) {
+	int indexX = blockIdx.x * blockDim.x + threadIdx.x;
+	int indexY = blockIdx.y * blockDim.y + threadIdx.y;
+	int index = indexY * DIM + indexX;
+	c[index] = 0;
+}
+
+
 __device__
 int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale, int imageWidth, int imageHeight) {
 	MYFLOAT jx = scale * (MYFLOAT)(imageWidth/2 - x + offsetx/scale)/(imageWidth/2);
@@ -112,6 +126,7 @@ int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFL
 
 	return i;
 }
+
 
 __global__
 void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale,
@@ -142,6 +157,7 @@ void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT of
 	ptr[index * 4 + 3] = 255;
 }
 
+
 char print_help = 0;
 
 // Yuck, GLUT text is old junk that should be avoided... but it will have to do
@@ -152,6 +168,7 @@ static void print_str(void *font, const char *string) {
 		glutBitmapCharacter(font, string[i]);
 	}
 }
+
 
 void PrintHelp() {
 	if (print_help)	{
@@ -187,23 +204,28 @@ void PrintHelp() {
 	}
 }
 
+
 // Compute fractal and display image
-void Draw() {
+
+void draw() {
 	const int blockSize = 32;
-	const int imageSize = imageWidth * imageHeight;
+	const int imageSize = DIM * DIM;
 	const int size = imageSize * 4 * sizeof(unsigned char);
 	dim3 dimBlock(blockSize, blockSize);
 	dim3 dimGrid(imageWidth / blockSize, imageHeight / blockSize);
 
-	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter, offsetx, offsety, scale,
-			imageWidth, imageHeight);
-	gpuErrchk( cudaPeekAtLastError() );
-	gpuErrchk( cudaDeviceSynchronize() );
-	gpuErrchk( cudaMemcpy(pixels, devicePixels, size, cudaMemcpyDeviceToHost) );
+	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter,
+																				offsetx, offsety, scale,
+																				imageWidth, imageHeight);
+	gpuErrchk(cudaPeekAtLastError());
+	gpuErrchk(cudaDeviceSynchronize());
+	gpuErrchk(cudaMemcpy(pixels, devicePixels,
+												size, cudaMemcpyDeviceToHost));
 
-	// Dump the whole picture onto the screen. (Old-style OpenGL but without lots of geometry that doesn't matter so much.)
-	glClearColor( 0.0, 0.0, 0.0, 1.0 );
-	glClear(GL_COLOR_BUFFER_BIT );
+	// Dump the whole picture onto the screen.
+	// (Old-style OpenGL but without lots of geometry that doesn't matter so much.)
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT);
 	glDrawPixels(imageWidth, imageHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
 
 	if (print_help)
@@ -211,6 +233,7 @@ void Draw() {
 
 	glutSwapBuffers();
 }
+
 
 char explore = 1;
 
@@ -223,6 +246,7 @@ static void Reshape(int width, int height) {
 	glutPostRedisplay();
 }
 
+
 int mouse_x, mouse_y, mouse_btn;
 
 // Mouse down
@@ -234,6 +258,7 @@ static void mouse_button(int button, int state, int x, int y) {
 		mouse_btn = button;
 	}
 }
+
 
 // Drag mouse
 static void mouse_motion(int x, int y) {
@@ -253,6 +278,7 @@ static void mouse_motion(int x, int y) {
 		glutPostRedisplay();
 	}
 }
+
 
 void KeyboardProc(unsigned char key, int x, int y) {
 	switch (key)	{
@@ -274,13 +300,15 @@ void KeyboardProc(unsigned char key, int x, int y) {
 	glutPostRedisplay();
 }
 
+
 // Main program, inits
 int main(int argc, char** argv) {
+	cudaDeviceReset();
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA );
 	glutInitWindowSize(DIM, DIM );
 	glutCreateWindow("Mandelbrot explorer (GPU)");
-	glutDisplayFunc(Draw);
+	glutDisplayFunc(draw);
 	glutMouseFunc(mouse_button);
 	glutMotionFunc(mouse_motion);
 	glutKeyboardFunc(KeyboardProc);
