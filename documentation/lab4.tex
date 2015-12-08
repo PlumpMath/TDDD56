@@ -59,7 +59,61 @@ basicstyle=\footnotesize
   \end{ltslisting}
 
 
-\item \textit{}
+\item \textit{What happens if you use too many threads per block?}
+
+  Absolute and utter chaos. We've managed with 1024 threads but no more.
+
+\item \textit{At what data size is the GPU faster than the CPU?}
+
+  The GPU gets faster at a matrix size of 64 by 64. Though this measure does not count the time it takes to copy the data back and forth.
+
+  \begin{lstlisting}
+    < GPU execution took 0.023520 milliseconds for 32.
+    > CPU execution took 0.004000 milliseconds for 32.
+
+    < GPU execution took 0.018848 milliseconds for 64.
+    > CPU execution took 0.051000 milliseconds for 64.
+
+    < GPU execution took 0.037088 milliseconds for 128.
+    > CPU execution took 0.316000 milliseconds for 128.
+
+    < GPU execution took 0.114528 milliseconds for 256.
+    > CPU execution took 0.761000 milliseconds for 256.
+
+    < GPU execution took 0.443008 milliseconds for 512.
+    > CPU execution took 4.167000 milliseconds for 512.
+
+    < GPU execution took 1.927200 milliseconds for 1024.
+    > CPU execution took 39.146000 milliseconds for 1024.
+  \end{lstlisting}
+
+  If we take the transfer times into account we get the following results:
+
+  \begin{lstlisting}
+    < GPU execution took 0.068320 milliseconds for 32.
+    > CPU execution took 0.019000 milliseconds for 32.
+
+    < GPU execution took 0.063840 milliseconds for 64.
+    > CPU execution took 0.050000 milliseconds for 64.
+
+    < GPU execution took 0.131840 milliseconds for 128.
+    > CPU execution took 0.118000 milliseconds for 128.
+
+    < GPU execution took 0.458176 milliseconds for 256.
+    > CPU execution took 0.717000 milliseconds for 256.
+
+    < GPU execution took 1.928864 milliseconds for 512.
+    > CPU execution took 4.648000 milliseconds for 512.
+
+    < GPU execution took 7.875136 milliseconds for 1024.
+    > CPU execution took 40.074000 milliseconds for 1024.
+  \end{lstlisting}
+
+  With that taken into account the overtake comes at a matrix size of 128 by 128.
+
+\item \textit{What block size seems like a good choice? Compared to what?}
+
+
 
 \end{itemize}
 
