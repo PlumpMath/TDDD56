@@ -28,15 +28,15 @@ void add_matrix(float *a, float *b, float *c, int N) {
 
 int main() {
 	printDeviceProperties();
-	const int N = 512;
+	const int N = 1024;
 
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 
-	float a[N*N];
-	float b[N*N];
-	float c[N*N];
+	float* a = new float[N*N];
+	float* b = new float[N*N];
+	float* c = new float[N*N];
 	float* ad;
 	float* bd;
 	float* cd;
@@ -54,7 +54,7 @@ int main() {
 	cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
 
-	int gridDim = 8;
+	int gridDim = 16;
 	dim3 dimBlock(N/gridDim, N/gridDim);
 	dim3 dimGrid(gridDim, gridDim);
 	cudaEventRecord(start);

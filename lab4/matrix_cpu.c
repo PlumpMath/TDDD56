@@ -17,7 +17,7 @@ void add_matrix(float *a, float *b, float *c, int N) {
 }
 
 int main() {
-	const int N = 512;
+	const int N = 1024;
 
 	float a[N*N];
 	float b[N*N];
