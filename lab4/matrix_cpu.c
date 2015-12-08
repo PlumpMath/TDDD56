@@ -18,7 +18,7 @@ void add_matrix(float *a, float *b, float *c, int N) {
 }
 
 int main() {
-	for (unsigned int i = 4; i < 12; i++) {
+	for (unsigned int i = 5; i < 12; i++) {
 		const int N = pow(2, i);
 
 		float* a = new float[N*N];
@@ -33,7 +33,6 @@ int main() {
 				}
 		ResetMilli();
 		add_matrix(a, b, c, N);
-		printf("CPU took %f milliseconds for %d.\n", (double)GetMicroseconds()/1000.0, N);
 
 		if(1){
 			for (int i = 0; i < N; i++) {
@@ -43,5 +42,6 @@ int main() {
 				printf("\n");
 			}
 		}
+		printf("CPU execution took %f milliseconds for %d.\n", (double)GetMicroseconds()/1000.0, N);
 	}
 }

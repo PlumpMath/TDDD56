@@ -37,7 +37,7 @@ void clear_my_bitch_out(float *c, int N) {
 
 int main() {
 	printDeviceProperties();
-	for (unsigned int i = 4; i < 12; i++) {
+	for (unsigned int i = 5; i < 12; i++) {
 		const int N = pow(2, i);
 
 		cudaEvent_t start, stop;
@@ -64,11 +64,11 @@ int main() {
 		cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
 		cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
 
-		int gridDim = 8;
-		dim3 dimBlock(N/gridDim, N/gridDim);
-		dim3 dimGrid(gridDim, gridDim);
+		const int blockSize = 32;
+		dim3 dimBlock(blockSize, blockSize);
+		dim3 dimGrid(N/blockSize, N/blockSize);
 		cudaEventRecord(start);
-		add_matrix<<<dimBlock, dimGrid>>>(ad, bd, cd, N);
+		add_matrix<<<dimGrid, dimBlock>>>(ad, bd, cd, N);
 		cudaEventRecord(stop);
 		cudaThreadSynchronize();
 		cudaMemcpy(c, cd, size, cudaMemcpyDeviceToHost);
