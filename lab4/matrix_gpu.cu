@@ -39,7 +39,7 @@ int main() {
 	printDeviceProperties();
 	for (unsigned int i = 5; i < 11; i++) {
 		const int N = pow(2, i);
-		const int blockSize = pow(2, 5);
+		const int blockSize = pow(2, 4);
 
 		cudaEvent_t start, stop;
 		cudaEventCreate(&start);
@@ -83,7 +83,9 @@ int main() {
 			}
 			printf("\n");
 		}
-		printf("GPU execution took %f milliseconds for %d.\n", milliseconds, N);
+		printf(
+				"GPU execution took %f milliseconds for N=%d, Blocks=%dx%d, Grid=%dx%d.\n",
+				milliseconds, N, dimBlock.x, dimBlock.y, dimGrid.x, dimGrid.y);
 
 		// Try to clean up everything on the GPU, and do it twice!
 		clear_my_bitch_out<<<dimGrid, dimBlock>>>(cd, N);
