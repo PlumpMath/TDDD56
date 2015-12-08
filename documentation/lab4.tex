@@ -144,6 +144,21 @@ basicstyle=\footnotesize
 
   The answer is also highly dependant on the GPU in question.
 
+
+\item \textit{How much performance did you lose by making data accesses non-coalesced?}
+
+  It got worse by about a power of 2:
+
+  \begin{lstlisting}
+    GPU execution took 0.075104 milliseconds for 32.
+    GPU execution took 0.086528 milliseconds for 64.
+    GPU execution took 0.210144 milliseconds for 128.
+    GPU execution took 0.826240 milliseconds for 256.
+    GPU execution took 3.127072 milliseconds for 512.
+    GPU execution took 13.192064 milliseconds for 1024.
+  \end{lstlisting}
+
 \end{itemize}
+
 
 \end{document}
