@@ -133,7 +133,7 @@ void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT of
 		int imageWidth, int imageHeight) {
 	int indexX = blockIdx.x * blockDim.x + threadIdx.x;
 	int indexY = blockIdx.y * blockDim.y + threadIdx.y;
-	int index = indexY * imageWidth + indexX;
+	int index = indexY * imageHeight + indexX;
 
 	// Calculate the value at that position;
 	// int fractalValue = mandelbrot(indexX, indexY, maxiter, offsetx, offsety, scale);
@@ -214,13 +214,12 @@ void draw() {
 	dim3 dimBlock(blockSize, blockSize);
 	dim3 dimGrid(imageWidth / blockSize, imageHeight / blockSize);
 
-	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter,
-																				offsetx, offsety, scale,
-																				imageWidth, imageHeight);
+	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter, 
+			offsetx, offsety, scale,
+			imageWidth, imageHeight);
 	gpuErrchk(cudaPeekAtLastError());
 	gpuErrchk(cudaDeviceSynchronize());
-	gpuErrchk(cudaMemcpy(pixels, devicePixels,
-												size, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(pixels, devicePixels, size, cudaMemcpyDeviceToHost));
 
 	// Dump the whole picture onto the screen.
 	// (Old-style OpenGL but without lots of geometry that doesn't matter so much.)
