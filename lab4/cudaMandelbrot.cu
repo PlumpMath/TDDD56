@@ -55,9 +55,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 // Init image data
 void initBitmap(int width, int height) {
-	imageWidth = width;
-	imageHeight = height;
-
 	if (pixels)
 		free(pixels);
 
@@ -225,6 +222,9 @@ void draw() {
 char explore = 1;
 
 static void Reshape(int width, int height) {
+	imageWidth = width;
+	imageHeight = height;
+
 	glViewport(0, 0, width, height);
 	glLoadIdentity();
 	glOrtho(-0.5f, width - 0.5f, -0.5f, height - 0.5f, -1.f, 1.f);
