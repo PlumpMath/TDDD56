@@ -147,7 +147,7 @@ basicstyle=\footnotesize
 
 \item \textit{How much performance did you lose by making data accesses non-coalesced?}
 
-  It got worse by about a power of 2:
+  It got worse by about a power of 2 for large data sets:
 
   \begin{lstlisting}
     GPU execution took 0.075104 milliseconds for 32.
@@ -157,6 +157,26 @@ basicstyle=\footnotesize
     GPU execution took 3.127072 milliseconds for 512.
     GPU execution took 13.192064 milliseconds for 1024.
   \end{lstlisting}
+
+  These results should be compared to those above.
+
+
+\item \textit{What were the main changes in order to make the Mandelbrot run in CUDA?}
+
+
+\item \textit{How many blocks and threads did you use?}
+
+
+\item \textit{When you use the Complex class, what modifier did you have to use on the methods?}
+
+
+\item \textit{What performance did you get? How does that compare to the CPU solution?}
+
+
+\item \textit{What performance did you get with float vs double precision?}
+
+
+\item \textit{In Lab 1, load balancing was an important issue. Is that an issue here? Why/why not?}
 
 \end{itemize}
 
