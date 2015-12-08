@@ -10,8 +10,11 @@ matrix_cpu: matrix_cpu.c milli
 matrix_gpu: matrix_gpu.cu
 	nvcc matrix_gpu.cu -o matrix_gpu.o
 
-mandelbrot: interactiveMandelbrot.cpp
-	clang++ interactiveMandelbrot.cpp -o mandlebrot.o -lGL -lXt -lX11 -lglut
+mandelbrot_cpu: interactiveMandelbrot.cpp
+	clang++ interactiveMandelbrot.cpp -o mandlebrot_cpu.o -lGL -lXt -lX11 -lglut
+
+mandelbrot_gpu: cudaMandlebrot.cu
+	nvcc cudaMandlebrot.cu -o mandlebrot_gpu.o -lGL -lXt -lX11 -lglut
 
 clean:
 	rm *.o
