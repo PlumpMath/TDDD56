@@ -37,7 +37,7 @@ void clear_my_bitch_out(float *c, int N) {
 
 int main() {
 	printDeviceProperties();
-	for (unsigned int i = 5; i < 12; i++) {
+	for (unsigned int i = 5; i < 11; i++) {
 		const int N = pow(2, i);
 		const int blockSize = pow(2, 5);
 
