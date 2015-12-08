@@ -193,7 +193,7 @@ void Draw() {
 	const int imageSize = imageWidth * imageHeight;
 	const int size = imageSize * 4 * sizeof(unsigned char);
 	dim3 dimBlock(blockSize, blockSize);
-	dim3 dimGrid(imageSize / blockSize, imageSize / blockSize);
+	dim3 dimGrid(imageWidth / blockSize, imageHeight / blockSize);
 
 	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter, offsetx, offsety, scale,
 			imageWidth, imageHeight);
