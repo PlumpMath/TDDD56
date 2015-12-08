@@ -19,9 +19,9 @@ void add_matrix(float *a, float *b, float *c, int N) {
 int main() {
 	const int N = 1024;
 
-	float a[N*N];
-	float b[N*N];
-	float c[N*N];
+	float* a = new float[N*N];
+	float* b = new float[N*N];
+	float* c = new float[N*N];
 
 	for (int i = 0; i < N; i++)
 		for (int j = 0; j < N; j++)
@@ -31,7 +31,7 @@ int main() {
 		}
 	ResetMilli();
 	add_matrix(a, b, c, N);
-	printf("It took %f milliseconds.\n", (double)GetMicroseconds()/1000.0);
+	printf("CPU took %f milliseconds.\n", (double)GetMicroseconds()/1000.0);
 
 	if(1){
 		for (int i = 0; i < N; i++) {

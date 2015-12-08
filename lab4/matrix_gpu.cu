@@ -54,7 +54,7 @@ int main() {
 	cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
 
-	int gridDim = 16;
+	int gridDim = 8;
 	dim3 dimBlock(N/gridDim, N/gridDim);
 	dim3 dimGrid(gridDim, gridDim);
 	cudaEventRecord(start);
@@ -75,5 +75,5 @@ int main() {
 		printf("\n");
 	}
 
-	printf("Execution took %f milliseconds.\n", milliseconds);
+	printf("GPU execution took %f milliseconds.\n", milliseconds);
 }
