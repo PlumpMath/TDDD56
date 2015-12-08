@@ -24,19 +24,31 @@
 #include <stdlib.h>
 #include <math.h>
 
+
+// Select precision here! float or double!
+#define MYFLOAT float
+#define DIM 512
+
+
+// Image data
+unsigned char	*pixels = NULL;
+unsigned char	*devicePixels;
+// User controlled parameters
+int maxiter = 20;
+MYFLOAT offsetx = -200, offsety = 0, zoom = 0;
+MYFLOAT scale = 1.5;
+
+
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
-   if (code != cudaSuccess) 
+   if (code != cudaSuccess)
    {
          fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
          if (abort) exit(code);
       }
 }
 
-// Image data
-unsigned char	*pixels = NULL;
-unsigned char	*devicePixels;
 
 // Init image data
 void initBitmap(int width, int height) {
@@ -48,15 +60,6 @@ void initBitmap(int width, int height) {
 	gpuErrchk( cudaMalloc((void**)&devicePixels, size) );
 }
 
-#define DIM 128
-
-// Select precision here! float or double!
-#define MYFLOAT float
-
-// User controlled parameters
-int maxiter = 20;
-MYFLOAT offsetx = -200, offsety = 0;
-MYFLOAT scale = 1.5;
 
 // Complex number class
 struct cuComplex {
@@ -82,6 +85,16 @@ struct cuComplex {
 	}
 };
 
+
+__global__
+void clearData(unsigned char* c) {
+	int indexX = blockIdx.x * blockDim.x + threadIdx.x;
+	int indexY = blockIdx.y * blockDim.y + threadIdx.y;
+	int index = indexY * DIM + indexX;
+	c[index] = 0;
+}
+
+
 __device__
 int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale) {
 	MYFLOAT jx = scale * (MYFLOAT)(DIM/2 - x + offsetx/scale)/(DIM/2);
@@ -99,6 +112,7 @@ int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFL
 
 	return i;
 }
+
 
 __global__
 void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale) {
@@ -128,6 +142,7 @@ void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT of
 	ptr[index * 4 + 3] = 255;
 }
 
+
 char print_help = 0;
 
 // Yuck, GLUT text is old junk that should be avoided... but it will have to do
@@ -138,6 +153,7 @@ static void print_str(void *font, const char *string) {
 		glutBitmapCharacter(font, string[i]);
 	}
 }
+
 
 void PrintHelp() {
 	if (print_help)	{
@@ -173,9 +189,11 @@ void PrintHelp() {
 	}
 }
 
+
 // Compute fractal and display image
-void Draw() {
-	const int blockSize = 1;
+
+void draw() {
+	const int blockSize = 32;
 	const int imageSize = DIM * DIM;
 	const int size = imageSize * 4 * sizeof(unsigned char);
 	dim3 dimBlock(blockSize, blockSize);
@@ -197,6 +215,7 @@ void Draw() {
 	glutSwapBuffers();
 }
 
+
 char explore = 1;
 
 static void Reshape(int width, int height) {
@@ -207,6 +226,7 @@ static void Reshape(int width, int height) {
 
 	glutPostRedisplay();
 }
+
 
 int mouse_x, mouse_y, mouse_btn;
 
@@ -219,6 +239,7 @@ static void mouse_button(int button, int state, int x, int y) {
 		mouse_btn = button;
 	}
 }
+
 
 // Drag mouse
 static void mouse_motion(int x, int y) {
@@ -238,6 +259,7 @@ static void mouse_motion(int x, int y) {
 		glutPostRedisplay();
 	}
 }
+
 
 void KeyboardProc(unsigned char key, int x, int y) {
 	switch (key)	{
@@ -259,13 +281,15 @@ void KeyboardProc(unsigned char key, int x, int y) {
 	glutPostRedisplay();
 }
 
+
 // Main program, inits
 int main(int argc, char** argv) {
+	cudaDeviceReset();
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA );
 	glutInitWindowSize(DIM, DIM );
 	glutCreateWindow("Mandelbrot explorer (GPU)");
-	glutDisplayFunc(Draw);
+	glutDisplayFunc(draw);
 	glutMouseFunc(mouse_button);
 	glutMotionFunc(mouse_motion);
 	glutKeyboardFunc(KeyboardProc);
