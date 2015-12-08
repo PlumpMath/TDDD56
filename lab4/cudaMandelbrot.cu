@@ -100,15 +100,6 @@ struct cuComplex {
 };
 
 
-__global__
-void clearData(unsigned char* c) {
-	int indexX = blockIdx.x * blockDim.x + threadIdx.x;
-	int indexY = blockIdx.y * blockDim.y + threadIdx.y;
-	int index = indexY * DIM + indexX;
-	c[index] = 0;
-}
-
-
 __device__
 int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale, int imageWidth, int imageHeight) {
 	MYFLOAT jx = scale * (MYFLOAT)(imageWidth/2 - x + offsetx/scale)/(imageWidth/2);
@@ -129,32 +120,29 @@ int mandelbrot(int x, int y, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFL
 
 
 __global__
-void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT offsety, MYFLOAT scale,
-		int imageWidth, int imageHeight) {
+void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx,
+                    MYFLOAT offsety, MYFLOAT scale,
+                    int imageWidth, int imageHeight) {
 	int indexX = blockIdx.x * blockDim.x + threadIdx.x;
 	int indexY = blockIdx.y * blockDim.y + threadIdx.y;
-	int index = indexY * imageHeight + indexX;
+	int index = indexY * imageWidth + indexX;
 
 	// Calculate the value at that position;
-	// int fractalValue = mandelbrot(indexX, indexY, maxiter, offsetx, offsety, scale);
+	int fractalValue = mandelbrot(indexX, indexY, maxiter, offsetx, offsety, scale, imageWidth, imageHeight);
 
 	// Colorize it
-	// int red = 255 * fractalValue / maxiter;
-	// if (red > 255) red = 255 - red;
-	// int green = 255 * fractalValue * 4 / maxiter;
-	// if (green > 255) green = 255 - green;
-	// int blue = 255 * fractalValue * 20 / maxiter;
-	// if (blue > 255) blue = 255 - blue;
+	int red = 255 * fractalValue / maxiter;
+	if (red > 255) red = 255 - red;
+	int green = 255 * fractalValue * 4 / maxiter;
+	if (green > 255) green = 255 - green;
+	int blue = 255 * fractalValue * 20 / maxiter;
+	if (blue > 255) blue = 255 - blue;
 
-	// ptr[index * 4 + 0] = red;
-	// ptr[index * 4 + 1] = green;
-	// ptr[index * 4 + 2] = blue;
-	// ptr[index * 4 + 3] = 255;
-
-	ptr[index * 4 + 0] = 255;
-	ptr[index * 4 + 1] = 255;
-	ptr[index * 4 + 2] = 255;
+	ptr[index * 4 + 0] = red;
+	ptr[index * 4 + 1] = green;
+	ptr[index * 4 + 2] = blue;
 	ptr[index * 4 + 3] = 255;
+
 }
 
 
@@ -208,13 +196,13 @@ void PrintHelp() {
 // Compute fractal and display image
 
 void draw() {
-	const int blockSize = 32;
+	const int blockSize = 8;
 	const int imageSize = DIM * DIM;
 	const int size = imageSize * 4 * sizeof(unsigned char);
 	dim3 dimBlock(blockSize, blockSize);
 	dim3 dimGrid(imageWidth / blockSize, imageHeight / blockSize);
 
-	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter, 
+	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter,
 			offsetx, offsety, scale,
 			imageWidth, imageHeight);
 	gpuErrchk(cudaPeekAtLastError());
