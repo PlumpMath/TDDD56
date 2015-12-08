@@ -56,11 +56,129 @@ basicstyle=\footnotesize
     int indexX = blockIdx.x * blockDim.x + threadIdx.x;
     int indexY = blockIdx.y * blockDim.y + threadIdx.y;
     int index = indexY * N + indexX;
-  \end{ltslisting}
+  \end{lstlisting}
+
+\item \textit{What happens if you use too many threads per block?}
+
+  Absolute and utter chaos. We've managed with 1024 threads but no more.
+
+\item \textit{At what data size is the GPU faster than the CPU?}
+
+  The GPU gets faster at a matrix size of 64 by 64. Though this measure does not count the time it takes to copy the data back and forth.
+
+  \begin{lstlisting}
+    < GPU execution took 0.023520 milliseconds for 32.
+    > CPU execution took 0.004000 milliseconds for 32.
+
+    < GPU execution took 0.018848 milliseconds for 64.
+    > CPU execution took 0.051000 milliseconds for 64.
+
+    < GPU execution took 0.037088 milliseconds for 128.
+    > CPU execution took 0.316000 milliseconds for 128.
+
+    < GPU execution took 0.114528 milliseconds for 256.
+    > CPU execution took 0.761000 milliseconds for 256.
+
+    < GPU execution took 0.443008 milliseconds for 512.
+    > CPU execution took 4.167000 milliseconds for 512.
+
+    < GPU execution took 1.927200 milliseconds for 1024.
+    > CPU execution took 39.146000 milliseconds for 1024.
+  \end{lstlisting}
+
+  If we take the transfer times into account we get the following results:
+
+  \begin{lstlisting}
+    < GPU execution took 0.068320 milliseconds for 32.
+    > CPU execution took 0.019000 milliseconds for 32.
+
+    < GPU execution took 0.063840 milliseconds for 64.
+    > CPU execution took 0.050000 milliseconds for 64.
+
+    < GPU execution took 0.131840 milliseconds for 128.
+    > CPU execution took 0.118000 milliseconds for 128.
+
+    < GPU execution took 0.458176 milliseconds for 256.
+    > CPU execution took 0.717000 milliseconds for 256.
+
+    < GPU execution took 1.928864 milliseconds for 512.
+    > CPU execution took 4.648000 milliseconds for 512.
+
+    < GPU execution took 7.875136 milliseconds for 1024.
+    > CPU execution took 40.074000 milliseconds for 1024.
+  \end{lstlisting}
+
+  With that taken into account the overtake comes at a matrix size of 128 by 128.
+
+\item \textit{What block size seems like a good choice? Compared to what?}
+
+  From the data below we can conclude that a block size of 16 by 16 is generally the best performant.
+
+  \begin{lstlisting}
+    GPU took 0.020960 milliseconds for N=32, Blocks=32x32, Grid=1x1.
+    GPU took 0.012384 milliseconds for N=64, Blocks=32x32, Grid=2x2.
+    GPU took 0.007584 milliseconds for N=128, Blocks=32x32, Grid=4x4.
+    GPU took 0.012992 milliseconds for N=256, Blocks=32x32, Grid=8x8.
+    GPU took 0.052800 milliseconds for N=512, Blocks=32x32, Grid=16x16.
+    GPU took 0.205216 milliseconds for N=1024, Blocks=32x32, Grid=32x32.
+
+    GPU took 0.015552 milliseconds for N=32, Blocks=16x16, Grid=2x2.
+    GPU took 0.011488 milliseconds for N=64, Blocks=16x16, Grid=4x4.
+    GPU took 0.005376 milliseconds for N=128, Blocks=16x16, Grid=8x8.
+    GPU took 0.011008 milliseconds for N=256, Blocks=16x16, Grid=16x16.
+    GPU took 0.039136 milliseconds for N=512, Blocks=16x16, Grid=32x32.
+    GPU took 0.157920 milliseconds for N=1024, Blocks=16x16, Grid=64x64.
+
+    GPU took 0.015584 milliseconds for N=32, Blocks=8x8, Grid=4x4.
+    GPU took 0.011616 milliseconds for N=64, Blocks=8x8, Grid=8x8.
+    GPU took 0.007264 milliseconds for N=128, Blocks=8x8, Grid=16x16.
+    GPU took 0.018432 milliseconds for N=256, Blocks=8x8, Grid=32x32.
+    GPU took 0.072992 milliseconds for N=512, Blocks=8x8, Grid=64x64.
+    GPU took 0.292096 milliseconds for N=1024, Blocks=8x8, Grid=128x128.
+  \end{lstlisting}
 
 
-\item \textit{}
+\item \textit{Write down your data size, block size and timing data for the best GPU performance you can get.}
+
+  It all depends on the data size, we're not sure how to compare timings between the different data sizes. By what measure of performance? If it's absolute speedup we're after the bigger the data size the better the speedup.
+
+  The answer is also highly dependant on the GPU in question.
+
+
+\item \textit{How much performance did you lose by making data accesses non-coalesced?}
+
+  It got worse by about a power of 2 for large data sets:
+
+  \begin{lstlisting}
+    GPU execution took 0.075104 milliseconds for 32.
+    GPU execution took 0.086528 milliseconds for 64.
+    GPU execution took 0.210144 milliseconds for 128.
+    GPU execution took 0.826240 milliseconds for 256.
+    GPU execution took 3.127072 milliseconds for 512.
+    GPU execution took 13.192064 milliseconds for 1024.
+  \end{lstlisting}
+
+  These results should be compared to those above.
+
+
+\item \textit{What were the main changes in order to make the Mandelbrot run in CUDA?}
+
+
+\item \textit{How many blocks and threads did you use?}
+
+
+\item \textit{When you use the Complex class, what modifier did you have to use on the methods?}
+
+
+\item \textit{What performance did you get? How does that compare to the CPU solution?}
+
+
+\item \textit{What performance did you get with float vs double precision?}
+
+
+\item \textit{In Lab 1, load balancing was an important issue. Is that an issue here? Why/why not?}
 
 \end{itemize}
+
 
 \end{document}
