@@ -24,6 +24,16 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+         fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+         if (abort) exit(code);
+      }
+}
+
 // Image data
 unsigned char	*pixels = NULL;
 unsigned char	*devicePixels;
@@ -35,17 +45,17 @@ void initBitmap(int width, int height) {
 
 	int size = width * height * 4 * sizeof(unsigned char);
 	pixels = (unsigned char*)malloc(size);
-	cudaMalloc((void**)&devicePixels, size);
+	gpuErrchk( cudaMalloc((void**)&devicePixels, size) );
 }
 
-#define DIM 512
+#define DIM 128
 
 // Select precision here! float or double!
 #define MYFLOAT float
 
 // User controlled parameters
 int maxiter = 20;
-MYFLOAT offsetx = -200, offsety = 0, zoom = 0;
+MYFLOAT offsetx = -200, offsety = 0;
 MYFLOAT scale = 1.5;
 
 // Complex number class
@@ -97,19 +107,24 @@ void computeFractal(unsigned char *ptr, int maxiter, MYFLOAT offsetx, MYFLOAT of
 	int index = indexY * DIM + indexX;
 
 	// Calculate the value at that position;
-	int fractalValue = mandelbrot(indexX, indexY, maxiter, offsetx, offsety, scale);
+	// int fractalValue = mandelbrot(indexX, indexY, maxiter, offsetx, offsety, scale);
 
 	// Colorize it
-	int red = 255 * fractalValue / maxiter;
-	if (red > 255) red = 255 - red;
-	int green = 255 * fractalValue * 4 / maxiter;
-	if (green > 255) green = 255 - green;
-	int blue = 255 * fractalValue * 20 / maxiter;
-	if (blue > 255) blue = 255 - blue;
+	// int red = 255 * fractalValue / maxiter;
+	// if (red > 255) red = 255 - red;
+	// int green = 255 * fractalValue * 4 / maxiter;
+	// if (green > 255) green = 255 - green;
+	// int blue = 255 * fractalValue * 20 / maxiter;
+	// if (blue > 255) blue = 255 - blue;
 
-	ptr[index * 4 + 0] = red;
-	ptr[index * 4 + 1] = green;
-	ptr[index * 4 + 2] = blue;
+	// ptr[index * 4 + 0] = red;
+	// ptr[index * 4 + 1] = green;
+	// ptr[index * 4 + 2] = blue;
+	// ptr[index * 4 + 3] = 255;
+
+	ptr[index * 4 + 0] = 255;
+	ptr[index * 4 + 1] = 255;
+	ptr[index * 4 + 2] = 255;
 	ptr[index * 4 + 3] = 255;
 }
 
@@ -160,16 +175,16 @@ void PrintHelp() {
 
 // Compute fractal and display image
 void Draw() {
-	const int blockSize = 32;
+	const int blockSize = 1;
 	const int imageSize = DIM * DIM;
+	const int size = imageSize * 4 * sizeof(unsigned char);
 	dim3 dimBlock(blockSize, blockSize);
 	dim3 dimGrid(imageSize / blockSize, imageSize / blockSize);
 
 	computeFractal<<<dimGrid, dimBlock>>>(devicePixels, maxiter, offsetx, offsety, scale);
-	cudaThreadSynchronize();
-
-	int size = imageSize * 4 * sizeof(unsigned char);
-	cudaMemcpy(pixels, devicePixels, size, cudaMemcpyDeviceToHost);
+	gpuErrchk( cudaPeekAtLastError() );
+	gpuErrchk( cudaDeviceSynchronize() );
+	gpuErrchk( cudaMemcpy(pixels, devicePixels, size, cudaMemcpyDeviceToHost) );
 
 	// Dump the whole picture onto the screen. (Old-style OpenGL but without lots of geometry that doesn't matter so much.)
 	glClearColor( 0.0, 0.0, 0.0, 1.0 );
