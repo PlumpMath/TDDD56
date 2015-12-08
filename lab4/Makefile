@@ -10,7 +10,7 @@ matrix_cpu: matrix_cpu.c milli
 matrix_gpu: matrix_gpu.cu
 	nvcc matrix_gpu.cu -o matrix_gpu.o
 
-mandlebrot: interactiveMandelbrot.cpp
+mandelbrot: interactiveMandelbrot.cpp
 	clang++ interactiveMandelbrot.cpp -o mandlebrot.o -lGL -lXt -lX11 -lglut
 
 clean:
