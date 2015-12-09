@@ -1,5 +1,7 @@
 #include <cstdio>
 #include <algorithm>
+#include <pthread.h>
+#include <atomic>
 
 #include <string.h>
 
@@ -24,6 +26,8 @@ int *begin;
 #define debug_int(var)
 #define debug_size_t(var)
 #endif
+
+std::atomic<int> threads_available;
 
 // A C++ container class that translate int pointer
 // into iterators with little constant penalty
@@ -73,7 +77,7 @@ cxx_sort(int *array, size_t size)
 // * Not in place
 static
 void
-simple_quicksort(int *array, size_t size)
+sequential_quicksort(int *array, size_t size)
 {
 	int pivot, pivot_count, i;
 	int *left, *right;
@@ -114,8 +118,8 @@ simple_quicksort(int *array, size_t size)
 		}
 
 		// Recurse		
-		simple_quicksort(left, left_size);
-		simple_quicksort(right, right_size);
+		sequential_quicksort(left, left_size);
+		sequential_quicksort(right, right_size);
 
 		// Merge
 		memcpy(array, left, left_size * sizeof(int));
@@ -135,6 +139,64 @@ simple_quicksort(int *array, size_t size)
 	}
 }
 
+#if NB_THREADS > 0
+
+static void* parallel_quicksort_thread(void* arg)
+{
+}
+
+static void parallel_quicksort(int *array, size_t size)
+{ 
+	// Bad, bad way to pick a pivot
+	// Better take a sample and pick
+	// it median value.
+	int pivot_index = size / 2;
+	int pivot = array[pivot_index];
+
+	int i = 0, j = pivot_index;
+	while(true) {
+		while(array[i] < pivot && i < pivot_index) i++;
+		while(array[j] > pivot && j < size) j++;
+		
+		if(i >= pivot_index || j >= size) break;
+
+		// Swap
+		int n = array[i];
+		array[i] = array[j];
+		array[j] = n; 
+	} 
+
+	int *left = array;
+	int *right = &array[pivot_index];
+
+	// Recurse
+	if(threads_available.fetch_sub();
+	threads_available.compare_exchange_weak(threads_available, threads_available - 1)	
+	
+	// TODO: Spawn new thread if available.
+	if(threads_available > 0) {
+		threads_available--;
+	}
+
+	// pthread_t thread[NB_THREADS];
+	// pthread_attr_t attr;
+
+	// parallel_quicksort_thread_arg_t arg[NB_THREADS];
+
+	// // Setup and execute threads
+	// for(int i = 0; i < NB_THREADS; i++) {
+	// 	arg[i].id = i;	
+	// 	pthread_create(&thread[i], &attr, parallel_quicksort_thread, (void*)&arg[i]);
+	// }
+
+	// // Join threads
+	// for(int i = 0; i < NB_THREADS; i++) {
+	// 	pthread_join(thread[i], NULL);
+	// }
+}
+
+#endif
+
 // This is used as sequential sort in the pipelined sort implementation with drake (see merge.c)
 // to sort initial input data chunks before streaming merge operations.
 void
@@ -148,17 +210,16 @@ sort(int* array, size_t size)
 	// the number of threads to use and is defined at compareile time. NB_THREADS == 0 denotes a sequential version.
 	// NB_THREADS == 1 is a parallel version using only one thread that can be useful to monitor the overhead
 	// brought by addictional parallelization code.
-
-	// This is to make the base skeleton to work. Replace it with your own implementation
-	simple_quicksort(array, size);
-	// Use C++ sequential sort, just to see how fast it is
-	//cxx_sort(array, size);
+	
+	printf("NB_THREADS=%d\n", NB_THREADS);	
 
 	// Reproduce this structure here and there in your code to compare sequential or parallel versions of your code.
 #if NB_THREADS == 0
-	// Some sequential-specific sorting code
+	sequential_quicksort(array, size);
+	//cxx_sort(array, size);
 #else
-	// Some parallel sorting-related code
+	threads_available = NB_THREADS;
+	parallel_quicksort(array, size);
 #endif // #if NB_THREADS
 }
 
