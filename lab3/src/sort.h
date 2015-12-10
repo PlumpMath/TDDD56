@@ -11,3 +11,12 @@ void sort(int* array, size_t size);
 }
 #endif
 
+#if NB_THREADS > 0
+
+struct parallel_quicksort_thread_arg
+{
+  int id;
+};
+typedef struct parallel_quicksort_thread_arg parallel_quicksort_thread_arg_t;
+
+#endif
