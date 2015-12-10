@@ -32,8 +32,7 @@ std::atomic<int> threads_available;
 // A C++ container class that translate int pointer
 // into iterators with little constant penalty
 template<typename T>
-class DynArray
-{
+class DynArray {
 	typedef T& reference;
 	typedef const T& const_reference;
 	typedef T* iterator;
@@ -42,19 +41,16 @@ class DynArray
 	typedef size_t size_type;
 
 	public:
-	DynArray(T* buffer, size_t size)
-	{
+	DynArray(T* buffer, size_t size) {
 		this->buffer = buffer;
 		this->size = size;
 	}
 
-	iterator begin()
-	{
+	iterator begin() {
 		return buffer;
 	}
 
-	iterator end()
-	{
+	iterator end() {
 		return buffer + size;
 	}
 
@@ -63,10 +59,7 @@ class DynArray
 		size_t size;
 };
 
-static
-void
-cxx_sort(int *array, size_t size)
-{
+static void cxx_sort(int *array, size_t size) {
 	DynArray<int> cppArray(array, size);
 	std::sort(cppArray.begin(), cppArray.end());
 }
@@ -75,10 +68,7 @@ cxx_sort(int *array, size_t size)
 // * Recursion until array size is 1
 // * Bad pivot picking
 // * Not in place
-static
-void
-sequential_quicksort(int *array, size_t size)
-{
+static void sequential_quicksort(int *array, size_t size) {
 	int pivot, pivot_count, i;
 	int *left, *right;
 	size_t left_size = 0, right_size = 0;
@@ -88,43 +78,37 @@ sequential_quicksort(int *array, size_t size)
 	// This is a bad threshold. Better have a higher value
 	// And use a non-recursive sort, such as insert sort
 	// then tune the threshold value
-	if(size > 1)
-	{
+	if(size > 1) {
 		// Bad, bad way to pick a pivot
 		// Better take a sample and pick
 		// it median value.
 		pivot = array[size / 2];
-		
+
 		left = (int*)malloc(size * sizeof(int));
 		right = (int*)malloc(size * sizeof(int));
 
 		// Split
-		for(i = 0; i < size; i++)
-		{
-			if(array[i] < pivot)
-			{
+		for(i = 0; i < size; i++) {
+			if(array[i] < pivot) {
 				left[left_size] = array[i];
 				left_size++;
 			}
-			else if(array[i] > pivot)
-			{
+			else if(array[i] > pivot) {
 				right[right_size] = array[i];
 				right_size++;
 			}
-			else
-			{
+			else {
 				pivot_count++;
 			}
 		}
 
-		// Recurse		
+		// Recurse
 		sequential_quicksort(left, left_size);
 		sequential_quicksort(right, right_size);
 
 		// Merge
 		memcpy(array, left, left_size * sizeof(int));
-		for(i = left_size; i < left_size + pivot_count; i++)
-		{
+		for(i = left_size; i < left_size + pivot_count; i++) {
 			array[i] = pivot;
 		}
 		memcpy(array + left_size + pivot_count, right, right_size * sizeof(int));
@@ -133,20 +117,17 @@ sequential_quicksort(int *array, size_t size)
 		free(left);
 		free(right);
 	}
-	else
-	{
+	else {
 		// Do nothing
 	}
 }
 
 #if NB_THREADS > 0
 
-static void* parallel_quicksort_thread(void* arg)
-{
+static void* parallel_quicksort_thread(void* arg) {
 }
 
-static void parallel_quicksort(int *array, size_t size)
-{ 
+static void parallel_quicksort(int *array, size_t size) {
 	// Bad, bad way to pick a pivot
 	// Better take a sample and pick
 	// it median value.
@@ -157,22 +138,22 @@ static void parallel_quicksort(int *array, size_t size)
 	while(true) {
 		while(array[i] < pivot && i < pivot_index) i++;
 		while(array[j] > pivot && j < size) j++;
-		
+
 		if(i >= pivot_index || j >= size) break;
 
 		// Swap
 		int n = array[i];
 		array[i] = array[j];
-		array[j] = n; 
-	} 
+		array[j] = n;
+	}
 
 	int *left = array;
 	int *right = &array[pivot_index];
 
 	// Recurse
 	if(threads_available.fetch_sub();
-	threads_available.compare_exchange_weak(threads_available, threads_available - 1)	
-	
+	threads_available.compare_exchange_weak(threads_available, threads_available - 1)
+
 	// TODO: Spawn new thread if available.
 	if(threads_available > 0) {
 		threads_available--;
@@ -185,7 +166,7 @@ static void parallel_quicksort(int *array, size_t size)
 
 	// // Setup and execute threads
 	// for(int i = 0; i < NB_THREADS; i++) {
-	// 	arg[i].id = i;	
+	// 	arg[i].id = i;
 	// 	pthread_create(&thread[i], &attr, parallel_quicksort_thread, (void*)&arg[i]);
 	// }
 
@@ -200,8 +181,7 @@ static void parallel_quicksort(int *array, size_t size)
 // This is used as sequential sort in the pipelined sort implementation with drake (see merge.c)
 // to sort initial input data chunks before streaming merge operations.
 void
-sort(int* array, size_t size)
-{
+sort(int* array, size_t size) {
 	// Do some sorting magic here. Just remember: if NB_THREADS == 0, then everything must be sequential
 	// When this function returns, all data in array must be sorted from index 0 to size and not element
 	// should be lost or duplicated.
@@ -210,8 +190,8 @@ sort(int* array, size_t size)
 	// the number of threads to use and is defined at compareile time. NB_THREADS == 0 denotes a sequential version.
 	// NB_THREADS == 1 is a parallel version using only one thread that can be useful to monitor the overhead
 	// brought by addictional parallelization code.
-	
-	printf("NB_THREADS=%d\n", NB_THREADS);	
+
+	printf("NB_THREADS=%d\n", NB_THREADS);
 
 	// Reproduce this structure here and there in your code to compare sequential or parallel versions of your code.
 #if NB_THREADS == 0
@@ -222,4 +202,3 @@ sort(int* array, size_t size)
 	parallel_quicksort(array, size);
 #endif // #if NB_THREADS
 }
-
