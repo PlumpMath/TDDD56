@@ -1,0 +1,48 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+\usepackage{listings}
+\usepackage{hyperref}
+\lstset{
+language=C,
+basicstyle=\footnotesize
+}
+\begin{document}
+
+\section{Lab 3}
+
+
+\subsection{Lab demo}
+
+\begin{itemize}
+
+\item \textit{Describe the sequential sorting algorithm you chose to implement.}
+
+  It is quick sort.
+
+\item \textit{Describe the basic parallelization strategy you implemented.}
+
+  When we divide the work and recurse we use additional threads if such are available.
+
+\item \textit{Show the limitations of your parallel implementation.}
+
+  It's quite stupid. We'll end up waiting for threads if we have a non power of 2 number of threads.
+
+\item \textit{Describe how you made your implementation to run fast on 3 cores.}
+
+  We hasn't, yet.
+
+\item \textit{Show the sorting time and/or the speedup of your implementation.}
+
+
+\item \textit{Show the pipeline structure you chose for 1 to 6 cores (4 cores for students in
+Southfork).}
+
+\item \textit{Show the schedule you used for 1 to 6 cores (4 cores for students in Southfork).}
+
+\end{itemize}
+
+
+\end{document}
