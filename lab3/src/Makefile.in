@@ -21,7 +21,7 @@ CC_TEST_LDFLAGS = -L.
 
 ## C++ global parameters
 CXXFLAGS_BASE = 
-CXXFLAGS_PRIVATE = -isystem ../include
+CXXFLAGS_PRIVATE = -isystem ../include -std=c++11
 CXXFLAGS_CONFIG_RELEASE = -O3 -DNDEBUG
 CXXFLAGS_CONFIG_DEBUG = -g -O0 -DDEBUG=1
 CXX_LDFLAGS_PRIVATE = -L.
