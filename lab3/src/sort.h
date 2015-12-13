@@ -15,7 +15,8 @@ void sort(int* array, size_t size);
 
 struct parallel_quicksort_thread_arg
 {
-  int id;
+  int* array;
+  size_t size;
 };
 typedef struct parallel_quicksort_thread_arg parallel_quicksort_thread_arg_t;
 

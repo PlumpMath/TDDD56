@@ -28,6 +28,8 @@ int *begin;
 #endif
 
 std::atomic<int> threads_available;
+pthread_t thread[NB_THREADS];
+parallel_quicksort_thread_arg_t thread_args[NB_THREADS];
 
 // A C++ container class that translate int pointer
 // into iterators with little constant penalty
@@ -124,9 +126,6 @@ static void sequential_quicksort(int *array, size_t size) {
 
 #if NB_THREADS > 0
 
-static void* parallel_quicksort_thread(void* arg) {
-}
-
 static void parallel_quicksort(int *array, size_t size) {
 	// Bad, bad way to pick a pivot
 	// Better take a sample and pick
@@ -148,32 +147,33 @@ static void parallel_quicksort(int *array, size_t size) {
 	}
 
 	int *left = array;
+	int left_size = size / 2;
 	int *right = &array[pivot_index];
+	int right_size = size / 2;
 
 	// Recurse
 	if(threads_available.fetch_sub();
 	threads_available.compare_exchange_weak(threads_available, threads_available - 1)
 
-	// TODO: Spawn new thread if available.
-	if(threads_available > 0) {
-		threads_available--;
+	// Check if there is a thread available. This is done with a atomic decrease and fetch.
+	int new_thread_index = --threads_available;
+	if(new_thread_index >= 0) {
+		// Start thread that will take care of the right side.
+		thread_args[new_thread_index].array = right;
+		thread_args[new_thread_index].size = right_size;
+		pthread_create(&thread[new_thread_index], NULL, parallel_quicksort_thread,
+			(void*)&thread_args[new_thread_index]);
+	} else {
+		// There was no thread available to do the right side. We will have to do it ourselves.
+		parallel_quicksort(right, right_size);
 	}
 
-	// pthread_t thread[NB_THREADS];
-	// pthread_attr_t attr;
+	parallel_quicksort(left, left_size);
+}
 
-	// parallel_quicksort_thread_arg_t arg[NB_THREADS];
-
-	// // Setup and execute threads
-	// for(int i = 0; i < NB_THREADS; i++) {
-	// 	arg[i].id = i;
-	// 	pthread_create(&thread[i], &attr, parallel_quicksort_thread, (void*)&arg[i]);
-	// }
-
-	// // Join threads
-	// for(int i = 0; i < NB_THREADS; i++) {
-	// 	pthread_join(thread[i], NULL);
-	// }
+static void* parallel_quicksort_thread(void* _arg) {
+	parallel_quicksort_thread_arg* arg = (parallel_quicksort_thread_arg*) arg;
+	parallel_quicksort(arg.array, arg.size);
 }
 
 #endif
