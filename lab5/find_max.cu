@@ -3,11 +3,32 @@
 #include <stdio.h>
 #include "milli.c"
 
-__global__ void find_max(int *data, int N) {
-  int i;
-  i = threadIdx.x + blockDim.x*blockIdx.x;
 
-	// Write your CUDA kernel here
+#define SIZE 1024
+
+
+__global__ void find_max(int *data, int N) {
+  int index = threadIdx.x + blockDim.x * blockIdx.x;
+
+	int m = data[index];
+	for (int i = 0; i < SIZE / blockDim.x / gridDim.x; i++)
+		if (data[index + i] > m)
+			m = data[index + i];
+  data[index] = m;
+
+	if (threadIdx.x == 0) {
+		for (int i = 0; i < SIZE / blockDim.x / gridDim.x; i++)
+			if (data[index + i * blockDim.x] > m)
+				m = data[index + i * blockDim.x];
+		data[index] = m;
+
+		if (blockIdx.x == 0) {
+			for (int i = 0; i < SIZE / blockDim.x / gridDim.x; i++)
+				if (data[i * blockDim.x * gridDim.x] > m)
+					m = data[i * blockDim.x * gridDim.x];
+			data[index] = m;
+		}
+	}
 }
 
 void launch_cuda_kernel(int *data, int N) {
@@ -42,7 +63,6 @@ void find_max_cpu(int *data, int N) {
 	data[0] = m;
 }
 
-#define SIZE 1024
 // Dummy data in comments below for testing
 int data[SIZE];// = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
 int data2[SIZE];// = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
