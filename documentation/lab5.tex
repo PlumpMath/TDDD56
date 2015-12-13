@@ -1,0 +1,44 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+\usepackage{listings}
+\usepackage{hyperref}
+\lstset{
+language=C,
+basicstyle=\footnotesize
+}
+\begin{document}
+
+\section{Lab 5}
+
+\subsection{1. Reduction}
+
+\subsubsection{What timing did you get for your GPU reduction? Compare it to the CPU version.}
+
+
+\subsubsection{Try larger data size. On what size does the GPU version get faster, or at least comparable, to the GPU?}
+
+
+\subsubsection{How can you optimize this further? You should know at least one way.}
+
+
+
+
+\subsection{2. Bitonic merge sort}
+
+\subsubsection{Should each thread produce one output or two? Why?}
+
+
+\subsubsection{How many items can you handle in one block?}
+
+
+\subsubsection{What problem must be solved when you use more than one block? How did you solve it?}
+
+
+\subsubsection{What time do you get? Difference to the CPU? What is the break even size? What can you expect for a parallel CPU version? (Your conclusions here may vary between the labs.)}
+
+
+
+\end{document}
