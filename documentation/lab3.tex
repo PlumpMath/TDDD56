@@ -4,6 +4,7 @@
 \usepackage{graphicx}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 \usepackage{listings}
+\usepackage{tabu}
 \usepackage{hyperref}
 \lstset{
 language=C,
@@ -20,21 +21,51 @@ basicstyle=\footnotesize
 
 \item \textit{Describe the sequential sorting algorithm you chose to implement.}
 
-  It is quick sort.
+  We chose to implement quick sort.
+
 
 \item \textit{Describe the basic parallelization strategy you implemented.}
 
-  When we divide the work and recurse we use additional threads if such are available.
+  When we divide the work and recurse, we use additional threads if such are available. If we have an uneven number of threads available we split the work up equally unevenly.
+
 
 \item \textit{Show the limitations of your parallel implementation.}
 
-  It's quite stupid. We'll end up waiting for threads if we have a non power of 2 number of threads.
+  We do a lot of perhaps unnecessary sorting in order to get a good pivot.
+
+  \begin{lstlisting}
+	if (right - left > 100) {
+		int size = (right - left) / 100;
+		int copy[size];
+		std::copy(&array[left], &array[left + size], copy);
+		std::sort(copy, copy + size);
+		if (threads_available \% 2 == 0)
+			pivot = copy[size / 3];
+		else
+			pivot = copy[size / 2];
+	}
+  \end{lstlisting}
+
 
 \item \textit{Describe how you made your implementation to run fast on 3 cores.}
 
-  We hasn't, yet.
+  We split it up by thirds instead of by halves.
+
 
 \item \textit{Show the sorting time and/or the speedup of your implementation.}
+
+  When going from one to four threads we get a relative speedup of 332\%. The table below shows all the results from sorting 10 million random integers.
+
+  \begin{tabular}{ l r }
+    0 & 3564ms \\
+    1 & 2491ms \\
+    2 & 1338ms \\
+    3 & 963ms \\
+    4 & 750ms \\
+    5 & 725ms \\
+    6 & 571ms \\
+    12 & 566ms \\
+  \end{tabular}
 
 
 \item \textit{Show the pipeline structure you chose for 1 to 6 cores (4 cores for students in
