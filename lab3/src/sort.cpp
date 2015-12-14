@@ -27,7 +27,15 @@ int *begin;
 #define debug_size_t(var)
 #endif
 
+#if NB_THREADS > 0
+
 std::atomic<int> threads_available;
+pthread_t thread[NB_THREADS];
+parallel_quicksort_thread_arg_t thread_args[NB_THREADS];
+
+static void* parallel_quicksort_thread(void* _arg);
+
+#endif
 
 // A C++ container class that translate int pointer
 // into iterators with little constant penalty
@@ -124,56 +132,62 @@ static void sequential_quicksort(int *array, size_t size) {
 
 #if NB_THREADS > 0
 
-static void* parallel_quicksort_thread(void* arg) {
-}
+static void parallel_quicksort(int *array, int left, int right) {
+	int i = left, j = right;
 
-static void parallel_quicksort(int *array, size_t size) {
 	// Bad, bad way to pick a pivot
 	// Better take a sample and pick
 	// it median value.
-	int pivot_index = size / 2;
-	int pivot = array[pivot_index];
+	int pivot = array[(left + right) / 2];
 
-	int i = 0, j = pivot_index;
-	while(true) {
-		while(array[i] < pivot && i < pivot_index) i++;
-		while(array[j] > pivot && j < size) j++;
+	while(i <= j) {
+		while(array[i] < pivot) i++;
+		while(array[j] > pivot) j--;
 
-		if(i >= pivot_index || j >= size) break;
+		if(i <= j) {
+			// Swap
+			int n = array[i];
+			array[i] = array[j];
+			array[j] = n;
 
-		// Swap
-		int n = array[i];
-		array[i] = array[j];
-		array[j] = n;
+			i++;
+			j--;
+		}
 	}
 
-	int *left = array;
-	int *right = &array[pivot_index];
+	int new_thread_index = -1;
 
-	// Recurse
-	if(threads_available.fetch_sub();
-	threads_available.compare_exchange_weak(threads_available, threads_available - 1)
+	// Recurse right side
+	if(left < j) {
+		// Check if there is a thread available. This is done with a atomic decrease and fetch.
+		new_thread_index = --threads_available;
+		if(new_thread_index >= 0) {
+			// Start thread that will take care of the right side.
+			thread_args[new_thread_index].array = array;
+			thread_args[new_thread_index].left = left;
+			thread_args[new_thread_index].right = j;
+			parallel_quicksort_thread_arg_t* arg = &thread_args[new_thread_index];
+			pthread_create(&thread[new_thread_index], NULL, parallel_quicksort_thread,
+				(void*)&thread_args[new_thread_index]);
+		} else {
+			// There was no thread available to do the right side. We will have to do it ourselves.
+			parallel_quicksort(array, left, j);
+		}
+	}	
 
-	// TODO: Spawn new thread if available.
-	if(threads_available > 0) {
-		threads_available--;
+	// Recurse left side
+	if(i < right) {
+		parallel_quicksort(array, i, right);
 	}
 
-	// pthread_t thread[NB_THREADS];
-	// pthread_attr_t attr;
+	if(new_thread_index >= 0) {
+		pthread_join(thread[new_thread_index], NULL);
+	}
+}
 
-	// parallel_quicksort_thread_arg_t arg[NB_THREADS];
-
-	// // Setup and execute threads
-	// for(int i = 0; i < NB_THREADS; i++) {
-	// 	arg[i].id = i;
-	// 	pthread_create(&thread[i], &attr, parallel_quicksort_thread, (void*)&arg[i]);
-	// }
-
-	// // Join threads
-	// for(int i = 0; i < NB_THREADS; i++) {
-	// 	pthread_join(thread[i], NULL);
-	// }
+static void* parallel_quicksort_thread(void* _arg) {
+	parallel_quicksort_thread_arg_t* arg = (parallel_quicksort_thread_arg_t*) _arg;
+	parallel_quicksort(arg->array, arg->left, arg->right);
 }
 
 #endif
@@ -198,7 +212,7 @@ sort(int* array, size_t size) {
 	sequential_quicksort(array, size);
 	//cxx_sort(array, size);
 #else
-	threads_available = NB_THREADS;
-	parallel_quicksort(array, size);
+	threads_available = NB_THREADS - 1;
+	parallel_quicksort(array, 0, size - 1);
 #endif // #if NB_THREADS
 }
