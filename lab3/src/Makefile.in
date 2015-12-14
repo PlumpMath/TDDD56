@@ -5,14 +5,14 @@
 CONFIG = RELEASE
 
 ## C global parameters
-CFLAGS_BASE = 
-CFLAGS_PRIVATE = -isystem ../include 
+CFLAGS_BASE =
+CFLAGS_PRIVATE = -isystem ../include
 CFLAGS_CONFIG_RELEASE = -O3 -DNDEBUG
 CFLAGS_CONFIG_DEBUG = -g -O0 -DDEBUG=1
 CC_LDFLAGS_PRIVATE = -L.
-CC_LDFLAGS = 
+CC_LDFLAGS =
 CC_DEPS =
-CC_PKG = 
+CC_PKG =
 CC_LIBS =
 CC_TEST_PKG = $(CC_PKG) unit
 CC_TEST_LIBS = $(CC_LIBS)
@@ -20,14 +20,14 @@ CC_TEST_DEPS = $(CC_DEPS)
 CC_TEST_LDFLAGS = -L.
 
 ## C++ global parameters
-CXXFLAGS_BASE = 
+CXXFLAGS_BASE = -std=c++11
 CXXFLAGS_PRIVATE = -isystem ../include -std=c++11
-CXXFLAGS_CONFIG_RELEASE = -O3 -DNDEBUG
-CXXFLAGS_CONFIG_DEBUG = -g -O0 -DDEBUG=1
+CXXFLAGS_CONFIG_RELEASE = -O3 -DNDEBUG -std=c++11
+CXXFLAGS_CONFIG_DEBUG = -g -O0 -DDEBUG=1 -std=c++11
 CXX_LDFLAGS_PRIVATE = -L.
-CXX_LDFLAGS = 
-CXX_DEPS = 
-CXX_PKG = 
+CXX_LDFLAGS =
+CXX_DEPS =
+CXX_PKG =
 CXX_LIBS = -lrt
 CXX_TEST_PKG = $(CXX_PKG) unit
 CXX_TEST_LIBS = $(CXX_LIBS)
@@ -41,8 +41,8 @@ CXX_TEST_LDFLAGS = -L.
 
 ## List of (pg-config) packages this project depends on
 ## This affects CFLAGS, CXXFLAGS and LDFLAGS for tests
-LIBS_TEST = 
-PKG_TEST = 
+LIBS_TEST =
+PKG_TEST =
 
 include Makefile.fillmein
 
@@ -53,17 +53,17 @@ include Makefile.fillmein
 bincc_package = generate
 
 bincc_generate_src = generate.c
-bincxx_generate_src = 
+bincxx_generate_src =
 bin_generate_export = $(bincc_generate_src) $(bincxx_generate_src)
-bin_generate_deps = 
+bin_generate_deps =
 bin_generate_pkg = pelib
-bin_generate_libs = 
-bin_generate_ldflags = 
-bin_generate_cflags = 
-bin_generate_cflags_private = 
-bin_generate_cxxflags = 
-bin_generate_cxxflags_private = 
-bin_generate_embed = 
+bin_generate_libs =
+bin_generate_ldflags =
+bin_generate_cflags =
+bin_generate_cflags_private =
+bin_generate_cxxflags =
+bin_generate_cxxflags_private =
+bin_generate_embed =
 
 ## C++-compiled programs and their sources
 bincxx_package = drake-sort parallel-sort
@@ -76,20 +76,20 @@ bin_drake-sort_deps = merge.pc
 bin_drake-sort_pkg = drake drake-intel-ia
 bin_drake-sort_libs = -lmerge
 bin_drake-sort_ldflags = -L.
-bin_drake-sort_cflags =  
-bin_drake-sort_cflags_private = 
-bin_drake-sort_cxxflags =  
-bin_drake-sort_cxxflags_private = -DNB_THREADS=$(shell cat $(DRAKE_PLATFORM) | grep -E "^\s*param\s\s*p\s*:=\s*[0-9][0-9]*\s*;" | cut -f 2 -d = | cut -f 1 -d ';' | xargs echo) 
+bin_drake-sort_cflags =
+bin_drake-sort_cflags_private =
+bin_drake-sort_cxxflags =
+bin_drake-sort_cxxflags_private = -DNB_THREADS=$(shell cat $(DRAKE_PLATFORM) | grep -E "^\s*param\s\s*p\s*:=\s*[0-9][0-9]*\s*;" | cut -f 2 -d = | cut -f 1 -d ';' | xargs echo)
 bin_drake-sort_cxxflags_sort.cpp = -UNB_THREADS -DNB_THREADS=0
-bin_drake-sort_embed = 
+bin_drake-sort_embed =
 
 bincc_parallel-sort_src = parallel-sort.c utils.c $(SORT_CC_FILES)
 bincxx_parallel-sort_src = $(SORT_CXX_FILES)
 bin_parallel-sort_export = $(bincc_parallel-sort_src) $(bincxx_parallel-sort_src)
-bin_parallel-sort_deps = 
+bin_parallel-sort_deps =
 bin_parallel-sort_pkg = drake-intel-ia
 ## Add here library flags you may need. See commented example
-## Warning: using -lpthread can result in unpredictable 
+## Warning: using -lpthread can result in unpredictable
 ## behavior. Use -pthread instead.
 bin_parallel-sort_libs = $(PARALLEL_LIBS) # -lxml2
 ## Add here linker flags, typically library search path
@@ -101,22 +101,22 @@ bin_parallel-sort_cflags = $(PARALLEL_CFLAGS)
 bin_parallel-sort_cflags_private = -DNB_THREADS=$(NB_THREADS)
 ## Add in either two following variables C++ flags to use when compiling C++ files
 ## such as sort.cpp.
-bin_parallel-sort_cxxflags = 
-bin_parallel-sort_cxxflags_private = -DNB_THREADS=$(NB_THREADS) 
-bin_parallel-sort_embed = 
+bin_parallel-sort_cxxflags =
+bin_parallel-sort_cxxflags_private = -DNB_THREADS=$(NB_THREADS)
+bin_parallel-sort_embed =
 
-bincc__src = 
-bincxx__src = 
+bincc__src =
+bincxx__src =
 bincc__export = $(bincc__src) $(bincxx__src)
-bin__deps = 
-bin__pkg = 
-bin__libs = 
+bin__deps =
+bin__pkg =
+bin__libs =
 bin__ldflags =
 bin__cflags =
-bin__cflags_private = 
+bin__cflags_private =
 bin__cxxflags =
-bin__cxxflags_private = 
-bin__embed = 
+bin__cxxflags_private =
+bin__embed =
 
 ## Example
 ## List of packages
@@ -139,11 +139,11 @@ bin__embed =
 ## cflag options to build objects of package foo
 # bin_foo_cflags = -isystem $(INCLUDE_DIR)
 ## cflag options to build objects of package foo, that does not appear in the generated pkg-config file
-# bin_foo_cflags_private = 
+# bin_foo_cflags_private =
 ## cflag options to build objects of package foo
 # bin_foo_cxxflags = -isystem $(INCLUDE_DIR)
 ## cflag options to build objects of package foo, that does not appear in the generated pkg-config file
-# bin_foo_cxxflags_private = 
+# bin_foo_cxxflags_private =
 ## Embed these files into the final excutable
 # bin_foo_embed = foo-res.xml
 ## Files to exports when building a source package for foo: foo source files and non-source foo-res.xml to be integrated in the binary package
@@ -155,66 +155,66 @@ bin__embed =
 # bincc_bar_export = $(bincc_bar_src)
 
 ## Static C library packages and their sources
-lib_package =  
+lib_package =
 
-libcc__src = 
-libcxx__src = 
+libcc__src =
+libcxx__src =
 lib__export = $(libcc__src) $(libcxx_src)
 ## Flags integrated as libs.private in pkg-config
-lib__libs = 
-lib__ldflags = 
-lib__pkg = 
+lib__libs =
+lib__ldflags =
+lib__pkg =
 ## Flags integrated as non-private pkg-config flags
 ## libs
-lib__pkg_libs = 
+lib__pkg_libs =
 ## cflags
-lib__pkg_cflags = 
-lib__pkg_cxxflags = 
+lib__pkg_cflags =
+lib__pkg_cxxflags =
 lib__pkg_description = General research utility library used in PELAB
 lib__pkg_url = http://www.ida.liu.se/~nicme26
 ## Rebuild the library upon changes in these files
 lib__deps =
 ## Embed these files into the final archive
-lib__embed = 
+lib__embed =
 
-drake_package = merge 
+drake_package = merge
 
 ## Custom schedule
 merge_schedule = $(DRAKE_SCHEDULE)
 drakecc_merge_graph = $(DRAKE_TASKGRAPH)
-drakecxx_merge_graph = 
+drakecxx_merge_graph =
 drakecxx_merge_src = $(SORT_CXX_SRC)
 drake_merge_scheduler = lpt
 drake_merge_platform = $(DRAKE_PLATFORM)
-drake_merge_embed = 
-drakecc_merge_src = 
-drake_merge_cflags = 
-drake_merge_cflags_private = 
-drake_merge_cxxflags = 
-drake_merge_cxxflags_private = 
+drake_merge_embed =
+drakecc_merge_src =
+drake_merge_cflags =
+drake_merge_cflags_private =
+drake_merge_cxxflags =
+drake_merge_cxxflags_private =
 drake_merge_export = $(drakecc_merge_src) $(drakecxx_merge_src) sort.h utils.h merge-1.graphml merge-2.graphml merge-3.graphml merge-4.graphml merge-5.graphml merge-6.graphml platform-1.dat platform-2.dat platform-3.dat platform-4.dat platform-5.dat platform-6.dat schedule-1.xml schedule-2.xml schedule-3.xml schedule-4.xml schedule-5.xml schedule-6.xml Makefile.fillmein
-drake_merge_libs = 
-drake_merge_ldflags = 
-drake_merge_pkg = 
-drake_merge_pkg_description = 
+drake_merge_libs =
+drake_merge_ldflags =
+drake_merge_pkg =
+drake_merge_pkg_description =
 
 ## C test packages and their sources
-testcc_package = 
+testcc_package =
 ## C++ test packages and their sources
-testcxx_package = 
+testcxx_package =
 
-testcc__src =  
-testcxx__src =  
+testcc__src =
+testcxx__src =
 test__export = $(testcc__src) $(testcxx__src)
-test__deps = 
-test__pkg = 
-test__libs = 
-test__ldflags = 
-testcxx__cflags = 
-testcxx__cflags_private = 
+test__deps =
+test__pkg =
+test__libs =
+test__ldflags =
+testcxx__cflags =
+testcxx__cflags_private =
 
 ## Where to continue compiling
-subdirs = 
+subdirs =
 
 ## Additional settings
 clean = *.o *.txt *.fig *.bin *.e *.d *.obj

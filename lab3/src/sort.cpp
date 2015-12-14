@@ -2,10 +2,14 @@
 #include <algorithm>
 #include <pthread.h>
 #include <atomic>
+#include <chrono>
+#include <iostream>
 
 #include <string.h>
 
 #include "sort.h"
+
+using namespace std::chrono;
 
 // These can be handy to debug your code through printf. Compile with CONFIG=DEBUG flags and spread debug(var)
 // through your code to display values that may understand better why your code may not work. There are variants
@@ -134,11 +138,17 @@ static void sequential_quicksort(int *array, size_t size) {
 
 static void parallel_quicksort(int *array, int left, int right) {
 	int i = left, j = right;
-
-	// Bad, bad way to pick a pivot
-	// Better take a sample and pick
-	// it median value.
-	int pivot = array[(left + right) / 2];
+	int pivot;
+	if (right - left > 100) {
+		int size = (right - left) / 100;
+		int copy[size];
+		std::copy(&array[left], &array[left + size], copy);
+		std::sort(copy, copy + size);
+		pivot = copy[size / 2];
+	}
+	else {
+		pivot = array[(left + right) / 2];
+	}
 
 	while(i <= j) {
 		while(array[i] < pivot) i++;
@@ -166,18 +176,27 @@ static void parallel_quicksort(int *array, int left, int right) {
 			thread_args[new_thread_index].array = array;
 			thread_args[new_thread_index].left = left;
 			thread_args[new_thread_index].right = j;
+			thread_args[new_thread_index].thread_id = new_thread_index;
+			thread_args[new_thread_index].start = high_resolution_clock::now();
 			parallel_quicksort_thread_arg_t* arg = &thread_args[new_thread_index];
+
 			pthread_create(&thread[new_thread_index], NULL, parallel_quicksort_thread,
 				(void*)&thread_args[new_thread_index]);
 		} else {
 			// There was no thread available to do the right side. We will have to do it ourselves.
 			parallel_quicksort(array, left, j);
 		}
-	}	
+	}
 
 	// Recurse left side
 	if(i < right) {
+		high_resolution_clock::time_point start = high_resolution_clock::now();
 		parallel_quicksort(array, i, right);
+		if (new_thread_index >=0) {
+			high_resolution_clock::time_point end = high_resolution_clock::now();
+			duration<double, std::milli> duration = end - start;
+			std::cout << "Main thread ran in: " << duration.count() << std::endl;
+		}
 	}
 
 	if(new_thread_index >= 0) {
@@ -187,7 +206,15 @@ static void parallel_quicksort(int *array, int left, int right) {
 
 static void* parallel_quicksort_thread(void* _arg) {
 	parallel_quicksort_thread_arg_t* arg = (parallel_quicksort_thread_arg_t*) _arg;
+	high_resolution_clock::time_point end = high_resolution_clock::now();
+	duration<double, std::milli> duration = end - arg->start;
+	std::cout << "Time to create thread " << arg->thread_id << ": " << duration.count() << std::endl;
+
 	parallel_quicksort(arg->array, arg->left, arg->right);
+
+	end = high_resolution_clock::now();
+	duration = end - arg->start;
+	std::cout << "Thread " << arg->thread_id << " finished in: " << duration.count() << std::endl;
 }
 
 #endif
