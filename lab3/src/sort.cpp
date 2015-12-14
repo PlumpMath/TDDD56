@@ -33,11 +33,9 @@ int *begin;
 
 #if NB_THREADS > 0
 
-std::atomic<int> threads_available;
-pthread_t thread[NB_THREADS];
-parallel_quicksort_thread_arg_t thread_args[NB_THREADS];
-
 static void* parallel_quicksort_thread(void* _arg);
+
+std::atomic<int> thread_id_taken;
 
 #endif
 
@@ -136,7 +134,7 @@ static void sequential_quicksort(int *array, size_t size) {
 
 #if NB_THREADS > 0
 
-static void parallel_quicksort(int *array, int left, int right) {
+static void parallel_quicksort(int *array, int left, int right, int threads_available) {
 	int i = left, j = right;
 	int pivot;
 	if (right - left > 100) {
@@ -144,7 +142,10 @@ static void parallel_quicksort(int *array, int left, int right) {
 		int copy[size];
 		std::copy(&array[left], &array[left + size], copy);
 		std::sort(copy, copy + size);
-		pivot = copy[size / 2];
+		if (threads_available % 2 == 0)
+			pivot = copy[size / 3];
+		else
+			pivot = copy[size / 2];
 	}
 	else {
 		pivot = array[(left + right) / 2];
@@ -165,55 +166,62 @@ static void parallel_quicksort(int *array, int left, int right) {
 		}
 	}
 
-	int new_thread_index = -1;
+	pthread_t thread;
+	parallel_quicksort_thread_arg_t thread_arg;
+	int threads_available_left = 0;
+	int threads_available_right = 0;
+	if(threads_available > 0) {
+		if (threads_available % 2 == 1) {
+			threads_available_left = (threads_available - 1) / 2;
+		}
+		else {
+			threads_available_left = (threads_available - 1) / 2 + 1;
+		}
+		threads_available_right = (threads_available - 1) - threads_available_left;
+	}
 
 	// Recurse right side
 	if(left < j) {
-		// Check if there is a thread available. This is done with a atomic decrease and fetch.
-		new_thread_index = --threads_available;
-		if(new_thread_index >= 0) {
+		if(threads_available > 0) {
 			// Start thread that will take care of the right side.
-			thread_args[new_thread_index].array = array;
-			thread_args[new_thread_index].left = left;
-			thread_args[new_thread_index].right = j;
-			thread_args[new_thread_index].thread_id = new_thread_index;
-			thread_args[new_thread_index].start = high_resolution_clock::now();
-			parallel_quicksort_thread_arg_t* arg = &thread_args[new_thread_index];
+			thread_arg.array = array;
+			thread_arg.left = left;
+			thread_arg.right = j;
+			thread_arg.thread_id = ++thread_id_taken;
+			thread_arg.threads_available = threads_available_right;
+			thread_arg.start = high_resolution_clock::now();
+			parallel_quicksort_thread_arg_t* arg = &thread_arg;
 
-			pthread_create(&thread[new_thread_index], NULL, parallel_quicksort_thread,
-				(void*)&thread_args[new_thread_index]);
+			pthread_create(&thread, NULL, parallel_quicksort_thread,
+				(void*)&thread_arg);
 		} else {
-			// There was no thread available to do the right side. We will have to do it ourselves.
-			parallel_quicksort(array, left, j);
+			parallel_quicksort(array, left, j, threads_available_right);
 		}
 	}
 
 	// Recurse left side
 	if(i < right) {
 		high_resolution_clock::time_point start = high_resolution_clock::now();
-		parallel_quicksort(array, i, right);
-		if (new_thread_index >=0) {
+		parallel_quicksort(array, i, right, threads_available_left);
+		if (threads_available > 0) {
 			high_resolution_clock::time_point end = high_resolution_clock::now();
 			duration<double, std::milli> duration = end - start;
 			std::cout << "Main thread ran in: " << duration.count() << std::endl;
 		}
 	}
 
-	if(new_thread_index >= 0) {
-		pthread_join(thread[new_thread_index], NULL);
+	if(threads_available > 0) {
+		pthread_join(thread, NULL);
 	}
 }
 
 static void* parallel_quicksort_thread(void* _arg) {
 	parallel_quicksort_thread_arg_t* arg = (parallel_quicksort_thread_arg_t*) _arg;
+
+	parallel_quicksort(arg->array, arg->left, arg->right, arg->threads_available);
+
 	high_resolution_clock::time_point end = high_resolution_clock::now();
 	duration<double, std::milli> duration = end - arg->start;
-	std::cout << "Time to create thread " << arg->thread_id << ": " << duration.count() << std::endl;
-
-	parallel_quicksort(arg->array, arg->left, arg->right);
-
-	end = high_resolution_clock::now();
-	duration = end - arg->start;
 	std::cout << "Thread " << arg->thread_id << " finished in: " << duration.count() << std::endl;
 }
 
@@ -239,7 +247,7 @@ sort(int* array, size_t size) {
 	sequential_quicksort(array, size);
 	//cxx_sort(array, size);
 #else
-	threads_available = NB_THREADS - 1;
-	parallel_quicksort(array, 0, size - 1);
+	thread_id_taken = 0;
+	parallel_quicksort(array, 0, size - 1, NB_THREADS - 1);
 #endif // #if NB_THREADS
 }
