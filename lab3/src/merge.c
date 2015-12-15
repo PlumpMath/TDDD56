@@ -180,39 +180,29 @@ int drake_run(task_t *task) {
 	right_link = pelib_array_read(link_tp)(task->pred, 1);
 	parent_link = pelib_array_read(link_tp)(task->succ, 0);
 
-
-	if (is_alive(left_link) || is_alive(right_link)) {
-		printf("Are we here yet?\n");
-		if (is_alive(left_link) && !is_alive(right_link)) {
-			printf("Left\n");
-			if (pelib_cfifo_length(int)(left_link->buffer) > 0) {
-				move(left_link, parent_link);
-			}
-		}
-		else if (!is_alive(left_link) && is_alive(right_link)) {
-			printf("Right\n");
-			if (pelib_cfifo_length(int)(right_link->buffer) > 0) {
-				move(right_link, parent_link);
-			}
+	while (pelib_cfifo_length(int)(left_link->buffer) > 0 && pelib_cfifo_length(int)(right_link->buffer) > 0) {
+		int left_val = pelib_cfifo_peek(int)(left_link->buffer, 0);
+		int right_val = pelib_cfifo_peek(int)(right_link->buffer, 0);
+		if (left_val < right_val) {
+			move(left_link, parent_link);
 		}
 		else {
-			printf("%s, length: %d\n", task->name, pelib_cfifo_length(int)(left_link->buffer));
-			if (left_link->prod == NULL)
-				pelib_printf(cfifo_t(int))(stdout, *left_link->buffer);
-			if (pelib_cfifo_length(int)(left_link->buffer) > 0 && pelib_cfifo_length(int)(right_link->buffer) > 0) {
-				int left_val = pelib_cfifo_peek(int)(left_link->buffer, 0);
-				int right_val = pelib_cfifo_peek(int)(right_link->buffer, 0);
-				if (left_val < right_val) {
-					move(left_link, parent_link);
-				}
-				else {
-					move(right_link, parent_link);
-				}
-			}
+			move(right_link, parent_link);
 		}
-		return 0;
 	}
-	printf("Or here?\n");
+
+	if (!is_alive(right_link)) {
+		while (pelib_cfifo_length(int)(left_link->buffer) > 0) {
+			move(left_link, parent_link);
+		}
+	}
+	if (!is_alive(left_link)) {
+		while (pelib_cfifo_length(int)(right_link->buffer) > 0) {
+			move(right_link, parent_link);
+		}
+	}
+
+	return drake_task_depleted(task);
 	// Write here a sequential merge reading from fifos in left and right input links
 	// and writing merged input in parent link. Keep in mind that not all input has arrived yet
 	// and the input fifos are too smal to hold it all anyway. However, you can begin to merge
@@ -349,7 +339,6 @@ int drake_run(task_t *task) {
 	// Return 1 if the task performed all its work and should terminate, or 0 if the task should
 	// run again in a later iteration. For now, the task terminates immediately, regardless of
 	// the data available in its input links and of work already performed or not performed.
-	return 1;
 }
 
 int drake_kill(task_t *task) {
