@@ -140,14 +140,12 @@ int drake_start(task_t *task) {
 	// be presorted. Use sequential sort implemented in sort.cpp
 
 	// Loop over all input links
-	for(j = 0; j < pelib_array_length(link_tp)(task->pred); j++)
-	{
+	for(j = 0; j < pelib_array_length(link_tp)(task->pred); j++) {
 		// Read input lnk from array
 		link = pelib_array_read(link_tp)(task->pred, j);
 
 		// Check if input link has a producer task
-		if(link->prod == NULL)
-		{
+		if(link->prod == NULL) {
 			// Run sequential pre-sort.
 			sort((int*)link->buffer->buffer, pelib_cfifo_capacity(int)(link->buffer));
 		}
