@@ -1,6 +1,7 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
+#include <chrono>
 extern "C" {
 #endif
 
@@ -15,7 +16,12 @@ void sort(int* array, size_t size);
 
 struct parallel_quicksort_thread_arg
 {
-  int id;
+  int* array;
+  int left;
+  int right;
+  int thread_id;
+  int threads_available;
+  std::chrono::high_resolution_clock::time_point start;
 };
 typedef struct parallel_quicksort_thread_arg parallel_quicksort_thread_arg_t;
 

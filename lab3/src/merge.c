@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include <string.h>
+
 
 #include <drake.h>
 #include <drake/link.h>
@@ -11,7 +13,7 @@
 #include "sort.h"
 #include "utils.h"
 
-// Filename of file containing the data to sort 
+// Filename of file containing the data to sort
 static char *input_filename;
 
 // These can be handy to debug your code through printf. Compile with CONFIG=DEBUG flags and spread debug(var)
@@ -31,11 +33,9 @@ static char *input_filename;
 #define debug_size_t(var)
 #endif
 
-int
-drake_init(task_t *task, void* aux)
-{
-	link_t *link;
-	array_t(int) *tmp;
+int drake_init(task_t *task, void* aux) {
+	link_t* link;
+	array_t(int)* tmp;
 	size_t input_buffer_size, input_size, i;
 
 	// The following makes tasks having no predecessor to load input data
@@ -44,14 +44,12 @@ drake_init(task_t *task, void* aux)
 
 	// Fetch arguments and only load data if an input filename is given
 	args_t *args = (args_t*)aux;
-	if(args->argc > 0)
-	{
+	if (args->argc > 0) {
 		input_filename = ((args_t*)aux)->argv[0];
 
 		// Read only the number of elements in input
 		tmp = pelib_array_preloadfilenamebinary(int)(input_filename);
-		if(tmp != NULL)
-		{
+		if (tmp != NULL) {
 			// Read the number of elements to be sorted
 			input_size = pelib_array_length(int)(tmp);
 			// No need of this array anymore
@@ -60,8 +58,7 @@ drake_init(task_t *task, void* aux)
 			// If the task has no predecessor (is a leaf)
 			// then we should build input links that hold
 			// input data.
-			if(pelib_array_length(link_tp)(task->pred) == 0)
-			{
+			if (pelib_array_length(link_tp)(task->pred) == 0) {
 				// Destroy the input link array for this task
 				// It will be replaced with an array of two link
 				// each holding the data subset to be sorted and
@@ -77,8 +74,7 @@ drake_init(task_t *task, void* aux)
 				input_buffer_size = input_size / ((drake_task_number() + 1) / 2) / 2;
 
 				// Let's build two new input links and make them load data
-				for(i = 0; i < 2; i++)
-				{
+				for (i = 0; i < 2; i++) {
 					// Allocation
 					link = (link_t*)malloc(sizeof(link_t));
 
@@ -86,7 +82,7 @@ drake_init(task_t *task, void* aux)
 					link->prod = NULL;
 					// The task being initialized is the consumer end of the link
 					link->cons = task;
-	
+
 					// Load the portion of input file that corresponds to the leaf task. Since fifos have no implementation
 					// for I/Os, we load an array and then turn it to a fifo
 					link->buffer = (cfifo_t(int)*)pelib_array_loadfilenamewindowbinary(int)(input_filename, 2 * input_buffer_size * (task->id - ((drake_task_number() + 1) / 2)) + input_buffer_size * i, input_buffer_size);
@@ -98,21 +94,18 @@ drake_init(task_t *task, void* aux)
 				}
 			}
 		}
-		else
-		{
+		else {
 			fprintf(stderr, "[%s:%s:%d:P%zu:%s] Cannot open input file \"%s\". Check application arguments.\n", __FILE__, __FUNCTION__, __LINE__, drake_platform_core_id(), task->name, input_filename);
 		}
 	}
-	else
-	{
+	else {
 		fprintf(stderr, "[%s:%s:%d:P%zu:%s] Missing file to read input from. Check application arguments.\n", __FILE__, __FUNCTION__, __LINE__, drake_platform_core_id(), task->name);
 	}
 
 	// Similarly as above, if a task has no consumer link
 	// then it is the root task. Here, we build a new link
 	// where the root task can write the final sorted array
-	if(pelib_array_length(link_tp)(task->succ) == 0)
-	{
+	if(pelib_array_length(link_tp)(task->succ) == 0) {
 		// Destroy the output links array
 		pelib_free(array_t(link_tp))(task->succ);
 		// Create a new output link array that can hold one link
@@ -138,9 +131,7 @@ drake_init(task_t *task, void* aux)
 	return 1;
 }
 
-int
-drake_start(task_t *task)
-{
+int drake_start(task_t *task) {
 	link_t *link;
 	int j;
 
@@ -149,14 +140,12 @@ drake_start(task_t *task)
 	// be presorted. Use sequential sort implemented in sort.cpp
 
 	// Loop over all input links
-	for(j = 0; j < pelib_array_length(link_tp)(task->pred); j++)
-	{
+	for(j = 0; j < pelib_array_length(link_tp)(task->pred); j++) {
 		// Read input lnk from array
 		link = pelib_array_read(link_tp)(task->pred, j);
 
 		// Check if input link has a producer task
-		if(link->prod == NULL)
-		{
+		if(link->prod == NULL) {
 			// Run sequential pre-sort.
 			sort((int*)link->buffer->buffer, pelib_cfifo_capacity(int)(link->buffer));
 		}
@@ -166,15 +155,21 @@ drake_start(task_t *task)
 	return 1;
 }
 
-int
-drake_run(task_t *task)
-{
+// There something in the link or the producer is alive.
+static bool is_alive(link_t* link) {
+	return link->prod != NULL && link->prod->status < TASK_KILLED && pelib_cfifo_length(int)(link->buffer) > 0;
+}
+
+static bool move(link_t* from, link_t* to){
+	pelib_cfifo_push(int)(to->buffer, pelib_cfifo_pop(int)(from->buffer));
+}
+
+int drake_run(task_t *task) {
 	// Input and output links
 	link_t *left_link, *right_link, *parent_link;
 
 	// If a task has no input links or no output link, then it can do nothing
-	if(pelib_array_length(link_tp)(task->pred) < 2 || pelib_array_length(link_tp)(task->succ) < 1)
-	{
+	if(pelib_array_length(link_tp)(task->pred) < 2 || pelib_array_length(link_tp)(task->succ) < 1) {
 		// Terminate immediately
 		return 1;
 	}
@@ -184,6 +179,33 @@ drake_run(task_t *task)
 	right_link = pelib_array_read(link_tp)(task->pred, 1);
 	parent_link = pelib_array_read(link_tp)(task->succ, 0);
 
+	while (pelib_cfifo_length(int)(left_link->buffer) > 0 &&
+				 pelib_cfifo_length(int)(right_link->buffer) > 0 &&
+				 !pelib_cfifo_is_full(size_t)(parent_link->buffer)) {
+		int left_val = pelib_cfifo_peek(int)(left_link->buffer, 0);
+		int right_val = pelib_cfifo_peek(int)(right_link->buffer, 0);
+		if (left_val < right_val) {
+			move(left_link, parent_link);
+		}
+		else {
+			move(right_link, parent_link);
+		}
+	}
+
+	if (!is_alive(right_link)) {
+		while (pelib_cfifo_length(int)(left_link->buffer) > 0 &&
+					 !pelib_cfifo_is_full(size_t)(parent_link->buffer)) {
+			move(left_link, parent_link);
+		}
+	}
+	if (!is_alive(left_link)) {
+		while (pelib_cfifo_length(int)(right_link->buffer) > 0 &&
+					 !pelib_cfifo_is_full(size_t)(parent_link->buffer)) {
+			move(right_link, parent_link);
+		}
+	}
+
+	return drake_task_depleted(task);
 	// Write here a sequential merge reading from fifos in left and right input links
 	// and writing merged input in parent link. Keep in mind that not all input has arrived yet
 	// and the input fifos are too smal to hold it all anyway. However, you can begin to merge
@@ -192,7 +214,7 @@ drake_run(task_t *task)
 	// task in the merging tree to begin as soon as possible, maximizing pipeline parallelism.
 
 	// The following gives useful code snippets to implement this lab
-	// 
+	//
 	// * Declare a pointer to a fifo that contains integers
 	//     cfifo_t(int) *fifo
 	//
@@ -220,13 +242,13 @@ drake_run(task_t *task)
 	//     pelib_cfifo_push(int)(fifo, var)
 	//   Note that this doesn't put back var into the same position in the fifo as it
 	//   was before it was consumed using pelib_cfifo_pop()
-	// 
+	//
 	// * Display the internal state of a fifo on stdout
 	//     pelib_printf(cfifo_t(int))(stdout, *fifo)
 	//   Beware: the fifo parameter is not a pointer but a copy of a fifo structure. Use *
 	//   operator to dereference a fifo pointer in the argument list, as in the example.
 	//   Depending on the state of the fifo, you can obtain 4 different kinds of outputs.
-	//   
+	//
 	//   1- Empty fifo of capacity 10. Read and write pointers point to the first memory slot
 	//       [>>.:.:.:.:.:.:.:.:.:.]
 	//     This is also an empty fifo
@@ -276,7 +298,7 @@ drake_run(task_t *task)
 	//   to NULL and addr is set to the left-most free memory element available. If the fifo is
 	//   in the first example of state 1, then size is set to 10 and extra is set to NUL. if the
 	//   fifo is in the second example of state 1 or in state 3, then size is set to 3 and extra
-	//   is set to the first memory element in the fifo. 
+	//   is set to the first memory element in the fifo.
 	//
 	// * Discard 4 elements from the head of the fifo without reading them (unless peek() or
 	//   peekaddr() operation have been run before.
@@ -295,7 +317,7 @@ drake_run(task_t *task)
 	//   if size < 4, then it may mean that some values in the fifo were modified before they
 	//   were consumed by writing too far from the address return by peekaddr(). This is
 	//   generally bad.
-	// 
+	//
 	// * Determine if the task can consume any more data in the present and future iterations,
 	//   that is, if all predecessor tasks already terminated, and if all input links are empty
 	//   This is typically useful to compute the decision to terminate the task or not.
@@ -320,26 +342,20 @@ drake_run(task_t *task)
 	// Return 1 if the task performed all its work and should terminate, or 0 if the task should
 	// run again in a later iteration. For now, the task terminates immediately, regardless of
 	// the data available in its input links and of work already performed or not performed.
-	return 1;
 }
 
-int
-drake_kill(task_t *task)
-{
+int drake_kill(task_t *task) {
 	// Everything went just fine. Task just got killed
 	return 1;
 }
 
-int
-drake_destroy(task_t *task)
-{
+int drake_destroy(task_t *task) {
 	// If consumer task at the end of output link is NULL, then
 	// task is the root task. We check if the output link of the
 	// root task is sorted and is equivalent to the data in input
 	// file.
 	link_t *parent_link = pelib_array_read(link_tp)(task->succ, 0);
-	if(parent_link->cons == NULL)
-	{
+	if(parent_link->cons == NULL) {
 		check_sorted(input_filename, parent_link->buffer);
 	}
 

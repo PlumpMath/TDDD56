@@ -2,10 +2,14 @@
 #include <algorithm>
 #include <pthread.h>
 #include <atomic>
+#include <chrono>
+#include <iostream>
 
 #include <string.h>
 
 #include "sort.h"
+
+using namespace std::chrono;
 
 // These can be handy to debug your code through printf. Compile with CONFIG=DEBUG flags and spread debug(var)
 // through your code to display values that may understand better why your code may not work. There are variants
@@ -27,7 +31,13 @@ int *begin;
 #define debug_size_t(var)
 #endif
 
-std::atomic<int> threads_available;
+#if NB_THREADS > 0
+
+static void* parallel_quicksort_thread(void* _arg);
+
+std::atomic<int> thread_id_taken;
+
+#endif
 
 // A C++ container class that translate int pointer
 // into iterators with little constant penalty
@@ -124,56 +134,95 @@ static void sequential_quicksort(int *array, size_t size) {
 
 #if NB_THREADS > 0
 
-static void* parallel_quicksort_thread(void* arg) {
+static void parallel_quicksort(int *array, int left, int right, int threads_available) {
+	int i = left, j = right;
+	int pivot;
+	if (right - left > 100) {
+		int size = (right - left) / 100;
+		int copy[size];
+		std::copy(&array[left], &array[left + size], copy);
+		std::sort(copy, copy + size);
+		if (threads_available % 2 == 0)
+			pivot = copy[size / 3];
+		else
+			pivot = copy[size / 2];
+	}
+	else {
+		pivot = array[(left + right) / 2];
+	}
+
+	while(i <= j) {
+		while(array[i] < pivot) i++;
+		while(array[j] > pivot) j--;
+
+		if(i <= j) {
+			// Swap
+			int n = array[i];
+			array[i] = array[j];
+			array[j] = n;
+
+			i++;
+			j--;
+		}
+	}
+
+	pthread_t thread;
+	parallel_quicksort_thread_arg_t thread_arg;
+	int threads_available_left = 0;
+	int threads_available_right = 0;
+	if(threads_available > 0) {
+		if (threads_available % 2 == 1) {
+			threads_available_left = (threads_available - 1) / 2;
+		}
+		else {
+			threads_available_left = (threads_available - 1) / 2 + 1;
+		}
+		threads_available_right = (threads_available - 1) - threads_available_left;
+	}
+
+	// Recurse right side
+	if(left < j) {
+		if(threads_available > 0) {
+			// Start thread that will take care of the right side.
+			thread_arg.array = array;
+			thread_arg.left = left;
+			thread_arg.right = j;
+			thread_arg.thread_id = ++thread_id_taken;
+			thread_arg.threads_available = threads_available_right;
+			thread_arg.start = high_resolution_clock::now();
+			parallel_quicksort_thread_arg_t* arg = &thread_arg;
+
+			pthread_create(&thread, NULL, parallel_quicksort_thread,
+				(void*)&thread_arg);
+		} else {
+			parallel_quicksort(array, left, j, threads_available_right);
+		}
+	}
+
+	// Recurse left side
+	if(i < right) {
+		high_resolution_clock::time_point start = high_resolution_clock::now();
+		parallel_quicksort(array, i, right, threads_available_left);
+		if (threads_available > 0) {
+			high_resolution_clock::time_point end = high_resolution_clock::now();
+			duration<double, std::milli> duration = end - start;
+			std::cout << "Main thread ran in: " << duration.count() << std::endl;
+		}
+	}
+
+	if(threads_available > 0) {
+		pthread_join(thread, NULL);
+	}
 }
 
-static void parallel_quicksort(int *array, size_t size) {
-	// Bad, bad way to pick a pivot
-	// Better take a sample and pick
-	// it median value.
-	int pivot_index = size / 2;
-	int pivot = array[pivot_index];
+static void* parallel_quicksort_thread(void* _arg) {
+	parallel_quicksort_thread_arg_t* arg = (parallel_quicksort_thread_arg_t*) _arg;
 
-	int i = 0, j = pivot_index;
-	while(true) {
-		while(array[i] < pivot && i < pivot_index) i++;
-		while(array[j] > pivot && j < size) j++;
+	parallel_quicksort(arg->array, arg->left, arg->right, arg->threads_available);
 
-		if(i >= pivot_index || j >= size) break;
-
-		// Swap
-		int n = array[i];
-		array[i] = array[j];
-		array[j] = n;
-	}
-
-	int *left = array;
-	int *right = &array[pivot_index];
-
-	// Recurse
-	if(threads_available.fetch_sub();
-	threads_available.compare_exchange_weak(threads_available, threads_available - 1)
-
-	// TODO: Spawn new thread if available.
-	if(threads_available > 0) {
-		threads_available--;
-	}
-
-	// pthread_t thread[NB_THREADS];
-	// pthread_attr_t attr;
-
-	// parallel_quicksort_thread_arg_t arg[NB_THREADS];
-
-	// // Setup and execute threads
-	// for(int i = 0; i < NB_THREADS; i++) {
-	// 	arg[i].id = i;
-	// 	pthread_create(&thread[i], &attr, parallel_quicksort_thread, (void*)&arg[i]);
-	// }
-
-	// // Join threads
-	// for(int i = 0; i < NB_THREADS; i++) {
-	// 	pthread_join(thread[i], NULL);
-	// }
+	high_resolution_clock::time_point end = high_resolution_clock::now();
+	duration<double, std::milli> duration = end - arg->start;
+	std::cout << "Thread " << arg->thread_id << " finished in: " << duration.count() << std::endl;
 }
 
 #endif
@@ -198,7 +247,7 @@ sort(int* array, size_t size) {
 	sequential_quicksort(array, size);
 	//cxx_sort(array, size);
 #else
-	threads_available = NB_THREADS;
-	parallel_quicksort(array, size);
+	thread_id_taken = 0;
+	parallel_quicksort(array, 0, size - 1, NB_THREADS - 1);
 #endif // #if NB_THREADS
 }
