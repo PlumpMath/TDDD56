@@ -9,7 +9,7 @@
 
 
 int data[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
-int data2[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
+int data2[SIZE];
 
 static void exchange(int *i, int *j)
 {
@@ -43,19 +43,30 @@ void bitonic_cpu(int *data, int N) {
 
 
 int main() {
+	for (int i = 0; i < SIZE; i++) {
+		data2[i] = data[i];
+	}
+
   ResetMilli();
   bitonic_cpu(data, SIZE);
   printf("%f\n", GetSeconds());
 
 	int *devdata;
 	cudaMalloc((void**)&devdata, SIZE*sizeof(int));
-	cudaMemcpy(devdata, data, SIZE*sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(devdata, data2, SIZE*sizeof(int), cudaMemcpyHostToDevice);
 
-	dim3 dimBlock(1, 1);
+	dim3 dimBlock(SIZE, 1);
 	dim3 dimGrid(1, 1);
 
   ResetMilli();
-  bitonic_gpu<<<dimGrid, dimBlock>>>(devdata, SIZE);
+	uint j, k;
+	// Outer loop, double size for each step.
+  for (k = 2; k <= SIZE; k = 2*k) {
+		// Inner loop, half size for each step
+    for (j = k >> 1; j > 0; j = j >> 1) {
+			bitonic_gpu<<<dimGrid, dimBlock>>>(devdata, SIZE, j, k);
+		}
+	}
 	cudaDeviceSynchronize();
   printf("%f\n", GetSeconds());
 
