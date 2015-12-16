@@ -148,6 +148,7 @@ int drake_start(task_t *task) {
 		if(link->prod == NULL) {
 			// Run sequential pre-sort.
 			sort((int*)link->buffer->buffer, pelib_cfifo_capacity(int)(link->buffer));
+			printf("%d\n", pelib_cfifo_length(int)(link->buffer));
 		}
 	}
 
@@ -161,7 +162,10 @@ static bool is_alive(link_t* link) {
 }
 
 static bool move(link_t* from, link_t* to){
-	pelib_cfifo_push(int)(to->buffer, pelib_cfifo_pop(int)(from->buffer));
+	if (!pelib_cfifo_push(int)(to->buffer, pelib_cfifo_pop(int)(from->buffer))) {
+		printf("I'm panicing!");
+		exit(123);
+	}
 }
 
 int drake_run(task_t *task) {

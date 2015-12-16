@@ -31,6 +31,5 @@ stack$(STACK_SUFFIX).o: stack.c stack.h
 nonblocking$(NON_BLOCKING_SUFFIX).o: non_blocking.c
 	clang $(CFLAGS) -c -o non_blocking$(NON_BLOCKING_SUFFIX).o non_blocking.c
 
-
 dist:
 	zip $(ARCHIVE) $(FILES)

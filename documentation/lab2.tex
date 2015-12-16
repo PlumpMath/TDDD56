@@ -19,12 +19,32 @@ basicstyle=\footnotesize
 
   Compare And Swap (CAS) can be used to implement a lock free concurrent stack by, for example:
 
-  A stack has a head* and back*. A list item has a next* and previous*. When we insert an item new_item into the stack we read the head* into last_item and do a CAS on list.head->next; if head->next == null, swap in new_item. Next we do a CAS on head*; if list.head == last_item, swap in new_item.
+  A stack has a head pointer and back pointer. A list item has a next pointer and previous pointer. When we insert an item new\_item into the stack we read the head pointer into last\_item and do a CAS on list.head-$\rangle$next; if head-$\rangle$next == null, swap in new\_item. Next we do a CAS on head pointer; if list.head == last\_item, swap in new\_item.
+
 
 \item \textit{Sketch a scenario featuring several threads raising the ABA problem.}
 
+  See hand written notes.
 
-\item \textit{Implement EVERYTHING!}
+
+\item \textit{Measure and plot the performance.}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\textwidth]{global_timing_both.png}
+  \caption{Graph laying it all bare.}
+\end{figure}
+
+
+\item \textit{Explain how CAS can implement a safe data structure sharing between several threads}
+
+By making sure that no one has been changing the stack while we were operating on it we can, sort of, make sure that the CAS stack is a thread safe data structure. If someone has modified the stack, we try again, over and over until we succeed in modifying the stack without anyone else getting between our non-atomic operations.
+
+
+\item \textit{Execute a multi-threaded implementation of the test\_aba() unit test}
+
+See how wonderfully it fails as we switch to the ABA branch.
+
 
 \end{itemize}
 
