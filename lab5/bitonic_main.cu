@@ -9,7 +9,7 @@
 
 
 int data[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
-int data2[SIZE];
+int data2[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
 
 static void exchange(int *i, int *j)
 {
@@ -48,34 +48,37 @@ int main() {
   printf("%f\n", GetSeconds());
 
 	int *devdata;
-	cudaMalloc((void**)&devdata, SIZE);
-	cudaMemcpy(devdata, data, SIZE, cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&devdata, SIZE*sizeof(int));
+	cudaMemcpy(devdata, data, SIZE*sizeof(int), cudaMemcpyHostToDevice);
 
-	dim3 dimBlock(16, 1);
+	dim3 dimBlock(1, 1);
 	dim3 dimGrid(1, 1);
 
   ResetMilli();
   bitonic_gpu<<<dimGrid, dimBlock>>>(devdata, SIZE);
-	cudaThreadSynchronize();
+	cudaDeviceSynchronize();
   printf("%f\n", GetSeconds());
 
 	cudaError_t err = cudaPeekAtLastError();
 	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
 
-	cudaMemcpy(data, devdata, SIZE, cudaMemcpyDeviceToHost);
+	cudaMemcpy(data2, devdata, SIZE*sizeof(int), cudaMemcpyDeviceToHost);
 
 	err = cudaPeekAtLastError();
 	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
 
   for (int i = 0; i < SIZE; i++) {
     if (data[i] != data2[i]) {
-      printf("Error at output line %d, %d != %d.\n", i, data[i], data2[i]);
+      printf("Error at output line %d,   %d != %d.\n", i, data[i], data2[i]);
     }
+		else {
+      printf("Correct output on line %d, %d == %d.\n", i, data[i], data2[i]);
+		}
 	}
 
   // Print result
   if (SIZE <= MAXPRINTSIZE)
-    for (int i=0;i<SIZE;i++)
+    for (int i = 0; i < SIZE; i++)
       printf("%d ", data[i]);
-
+	printf("\n");
 }

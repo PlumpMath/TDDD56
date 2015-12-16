@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 __device__
 static void exchange(int *i, int *j) {
 	int k;
@@ -16,12 +18,12 @@ void bitonic_gpu(int *data, int N) {
 			// Loop over data
       for (i = 0; i < N; i++) {
 				// Calculate indexing!
-        int ixj = i^j;
+        int ixj = i ^ j;
         if (ixj > i) {
           if ((i&k) == 0 && data[i] > data[ixj])
-						exchange(&data[i],&data[ixj]);
+						exchange(&data[i], &data[ixj]);
           if ((i&k) != 0 && data[i] < data[ixj])
-						exchange(&data[i],&data[ixj]);
+						exchange(&data[i], &data[ixj]);
         }
       }
     }
