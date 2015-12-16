@@ -1,12 +1,15 @@
+
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "bitonic_kernel.hu"
 #include "milli.h"
 
 
-#define SIZE 2048
-#define MAXPRINTSIZE 2048
+#define SIZE 1024
+#define MAXPRINTSIZE 2047
 
 
 int data[SIZE];
@@ -44,10 +47,10 @@ void bitonic_cpu(int *data, int N) {
 
 
 int main() {
+	srand(time(NULL));
+
 	for (int i = 0; i < SIZE; i++) {
-		data[i] = SIZE - i;
-	}
-	for (int i = 0; i < SIZE; i++) {
+		data[i] = rand();
 		data2[i] = data[i];
 	}
 
