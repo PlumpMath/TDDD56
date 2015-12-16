@@ -4,11 +4,12 @@
 #include "milli.h"
 
 
-#define SIZE 16
+#define SIZE 32
 #define MAXPRINTSIZE 32
 
 
-int data[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
+int data[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54,
+									32, 1, 8, 6, 55, 54, 23, 78, 88, 23, 2, 8, 99, 23, 15, 22};
 int data2[SIZE];
 
 static void exchange(int *i, int *j)
@@ -74,6 +75,7 @@ int main() {
 	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
 
 	cudaMemcpy(data2, devdata, SIZE*sizeof(int), cudaMemcpyDeviceToHost);
+	cudaFree(devdata);
 
 	err = cudaPeekAtLastError();
 	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
