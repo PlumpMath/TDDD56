@@ -1,15 +1,15 @@
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "bitonic_kernel.hu"
 #include "milli.h"
 
 
-#define SIZE 32
-#define MAXPRINTSIZE 32
+#define SIZE 2048
+#define MAXPRINTSIZE 2048
 
 
-int data[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54,
-									32, 1, 8, 6, 55, 54, 23, 78, 88, 23, 2, 8, 99, 23, 15, 22};
+int data[SIZE];
 int data2[SIZE];
 
 static void exchange(int *i, int *j)
@@ -45,6 +45,9 @@ void bitonic_cpu(int *data, int N) {
 
 int main() {
 	for (int i = 0; i < SIZE; i++) {
+		data[i] = SIZE - i;
+	}
+	for (int i = 0; i < SIZE; i++) {
 		data2[i] = data[i];
 	}
 
@@ -56,8 +59,8 @@ int main() {
 	cudaMalloc((void**)&devdata, SIZE*sizeof(int));
 	cudaMemcpy(devdata, data2, SIZE*sizeof(int), cudaMemcpyHostToDevice);
 
-	dim3 dimBlock(SIZE, 1);
-	dim3 dimGrid(1, 1);
+	dim3 dimBlock(min(SIZE, 1024), 1);
+	dim3 dimGrid(1 + (1024 / SIZE), 1);
 
   ResetMilli();
 	uint j, k;
@@ -68,7 +71,7 @@ int main() {
 			bitonic_gpu<<<dimGrid, dimBlock>>>(devdata, SIZE, j, k);
 		}
 	}
-	cudaDeviceSynchronize();
+	cudaThreadSynchronize();
   printf("%f\n", GetSeconds());
 
 	cudaError_t err = cudaPeekAtLastError();
@@ -80,18 +83,24 @@ int main() {
 	err = cudaPeekAtLastError();
 	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
 
+	bool data_correct = true;
   for (int i = 0; i < SIZE; i++) {
     if (data[i] != data2[i]) {
+			data_correct = false;
       printf("Error at output line %d,   %d != %d.\n", i, data[i], data2[i]);
     }
-		else {
+		else if (SIZE <= MAXPRINTSIZE) {
       printf("Correct output on line %d, %d == %d.\n", i, data[i], data2[i]);
 		}
 	}
 
-  // Print result
   if (SIZE <= MAXPRINTSIZE)
     for (int i = 0; i < SIZE; i++)
       printf("%d ", data[i]);
 	printf("\n");
+
+	if (data_correct)
+		printf("The two algorithms outputted the same results.\n");
+	else
+		printf("The data did not match!\n");
 }
