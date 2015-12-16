@@ -34,14 +34,11 @@ void find_max_between_blocks(uint *data, uint intsPerThread, uint gridSize, uint
 }
 
 void launch_cuda_kernel(uint *data, uint N) {
-	// Handle your CUDA kernel launches in this function
-
 	uint *devdata;
 	uint size = sizeof(int) * N;
 	cudaMalloc( (void**)&devdata, size);
 	cudaMemcpy(devdata, data, size, cudaMemcpyHostToDevice );
 
-	// Dummy launch
 	dim3 dimBlock(16, 1);
 	dim3 dimGrid(8, 1);
 	dim3 oneGrid(1, 1);

@@ -1,0 +1,7 @@
+
+#ifndef BITONIC_KERNEL
+#define BITONIC_KERNEL
+
+__global__ void bitonic_gpu(int *data, int N);
+
+#endif

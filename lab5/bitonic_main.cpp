@@ -1,15 +1,17 @@
+#include <stdio.h>
 
-// This is not really C++-code but pretty plain C code, but we compile it
-// as C++ so we can integrate with CUDA seamlessly.
 
 #include "bitonic_kernel.h"
-#include <stdio.h>
 #include "milli.h"
+
 
 #define SIZE 16
 #define MAXPRINTSIZE 32
+
+
 int data[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
 int data2[SIZE] = {1, 2, 5, 3, 6, 8, 5, 3, 1, 65, 8, 5, 3, 34, 2, 54};
+
 
 static void exchange(int *i, int *j)
 {
@@ -18,6 +20,7 @@ static void exchange(int *i, int *j)
 	*i = *j;
 	*j = k;
 }
+
 
 void bitonic_cpu(int *data, int N)
 {
