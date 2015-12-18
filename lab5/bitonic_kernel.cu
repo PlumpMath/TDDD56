@@ -1,37 +1,54 @@
+#include <stdio.h>
 
-// This is not really C++-code but pretty plain C code, but we compile it
-// as C++ so we can integrate with CUDA seamlessly.
+#include "milli.h"
 
-// If you plan on submitting your solution for the Parallel Sorting Contest,
-// please keep the split into main file and kernel file, so we can easily
-// insert other data.
 
-static void exchange(int *i, int *j)
-{
+__device__ inline
+static void exchange(int *i, int *j) {
 	int k;
 	k = *i;
 	*i = *j;
 	*j = k;
 }
 
-// No, this is not GPU code yet but just a copy of the CPU code, but this
-// is where I want to see your GPU code!
-void bitonic_gpu(int *data, int N)
-{
-  int i,j,k;
-  for (k=2;k<=N;k=2*k) // Outer loop, double size for each step
-  {
-    for (j=k>>1;j>0;j=j>>1) // Inner loop, half size for each step
-    {
-      for (i=0;i<N;i++) // Loop over data
-      {
-        int ixj=i^j; // Calculate indexing!
-        if ((ixj)>i)
-        {
-          if ((i&k)==0 && data[i]>data[ixj]) exchange(&data[i],&data[ixj]);
-          if ((i&k)!=0 && data[i]<data[ixj]) exchange(&data[i],&data[ixj]);
-        }
-      }
-    }
-  }
+__global__
+void bitonic_gpu(int *data, int j, int k) {
+  uint i = threadIdx.x + blockDim.x * blockIdx.x;
+	int ixj = i ^ j;
+	if (ixj > i) {
+		if ((i&k) == 0 && (data[i] > data[ixj]))
+			exchange(&data[i], &data[ixj]);
+		else if ((i&k) != 0 && data[i] < data[ixj])
+			exchange(&data[i], &data[ixj]);
+
+	}
+}
+
+
+void bitonic_gpu_main(int* data, uint size) {
+	int *devdata;
+	cudaMalloc((void**)&devdata, size*sizeof(int));
+	cudaMemcpy(devdata, data, size*sizeof(int), cudaMemcpyHostToDevice);
+
+	dim3 dimBlock(min(size, 1024), 1);
+	dim3 dimGrid(1 + (size / 1024), 1);
+	//printf("Block: %d, Grid: %d\n", dimBlock.x, dimGrid.x);
+
+	uint j, k;
+	// Outer loop, double size for each step.
+  for (k = 2; k <= size; k = 2*k) {
+		// Inner loop, half size for each step
+    for (j = k >> 1; j > 0; j = j >> 1) {
+			bitonic_gpu<<<dimGrid, dimBlock>>>(devdata, j, k);
+		}
+	}
+
+	cudaError_t err = cudaPeekAtLastError();
+	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
+
+	cudaMemcpy(data, devdata, size*sizeof(int), cudaMemcpyDeviceToHost);
+	cudaFree(devdata);
+
+	err = cudaPeekAtLastError();
+	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
 }

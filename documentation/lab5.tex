@@ -53,16 +53,75 @@ We could increse the number of levels. Right now we only have three levels.
 
 \subsubsection{Should each thread produce one output or two? Why?}
 
+Each thread moves data around in globally accessible data, so one thread doesn't have output per se.
 
+But it does change a limited amount of data and per iteration each thread swaps either none or two pieces of data in the array.
 
 \subsubsection{How many items can you handle in one block?}
 
+Precisely 1024.
 
 \subsubsection{What problem must be solved when you use more than one block? How did you solve it?}
+
+How to distribute the work on a per block/thread basis, but that was as easy as:
+
+\begin{listlisting}
+  uint i = threadIdx.x + blockDim.x * blockIdx.x;
+\end{lstlisting}
+
+At first we thought we thought we had to sync the threads after each kernel call, but it turns out the result was as correct without the syncs.
 
 
 \subsubsection{What time do you get? Difference to the CPU? What is the break even size? What can you expect for a parallel CPU version? (Your conclusions here may vary between the labs.)}
 
+Here are the timings for powers of 2 from 10 to 17:
 
+\begin{lstlisting}
+  2^10:
+  0.000468ms
+  0.000179ms
+
+  2^11:
+  0.000833ms
+  0.000220ms
+
+  2^12
+  0.002088ms
+  0.000264ms
+
+  2^13:
+  0.008020ms
+  0.000278ms
+
+  2^14:
+  0.014805ms
+  0.000316ms
+
+  2^15:
+  0.028203ms
+  0.000376ms
+
+  2^16:
+  0.050780ms
+  0.000406ms
+
+  2^17:
+  0.116221ms
+  0.000458ms
+\end{lstlisting}
+
+The above numbers are without the the copying of data back and forth. With that taken into account we have the following output:
+
+\begin{lstlisting}
+  2^10:
+  0.000473ms
+  0.058793ms
+
+  2^17:
+  0.110919ms
+  0.073480ms
+\end{lstlisting}
+
+Put into words: With the copying taken into account we need to have more than 2^17 data points for it to make sense to run the computation with CUDA.
 
 \end{document}
