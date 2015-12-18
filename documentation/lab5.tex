@@ -3,7 +3,7 @@
 \usepackage[english]{babel}
 \usepackage{graphicx}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
-\usepackage{listings}
+\usepackage{listingsutf8}
 \usepackage{hyperref}
 \lstset{
 language=C,
@@ -65,7 +65,7 @@ Precisely 1024.
 
 How to distribute the work on a per block/thread basis, but that was as easy as:
 
-\begin{listlisting}
+\begin{lstlisting}
   uint i = threadIdx.x + blockDim.x * blockIdx.x;
 \end{lstlisting}
 
@@ -122,6 +122,6 @@ The above numbers are without the the copying of data back and forth. With that 
   0.073480ms
 \end{lstlisting}
 
-Put into words: With the copying taken into account we need to have more than 2^17 data points for it to make sense to run the computation with CUDA.
+Put into words: With the copying taken into account we need to have more than $2^{17}$ data points for it to make sense to run the computation with CUDA.
 
 \end{document}
