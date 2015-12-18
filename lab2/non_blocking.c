@@ -22,6 +22,7 @@
  */
 
 #include <stddef.h>
+#include "non_blocking.h"
 
 /*
 Both cat() and software_cas() take as a first argument the address of the

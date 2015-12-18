@@ -112,7 +112,7 @@ int stack_pop(stack_t* stack) {
 	stack_item_t* old_head;
 	do {
 		old_head = stack->head;
-		item = __sync_val_compare_and_swap(&stack->head, old_head, old_head->prev);
+		item = (stack_item_t*)cas((size_t*)&stack->head, (size_t)old_head, (size_t)old_head->prev);
 	}	while(item != old_head);
 
 #else

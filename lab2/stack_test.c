@@ -31,19 +31,6 @@
 #include "stack.h"
 #include "non_blocking.h"
 
-#if WEIRD_NON_BLOCKING_DEF == 1
-inline size_t
-cas(size_t* reg, size_t oldval, size_t newval)
-{
-  asm volatile( "lock; cmpxchg %2, %1":
-                "=a"(oldval):
-                "m"(*reg), "r"(newval), "a"(oldval):
-                "memory" );
-
-  return oldval;
-}
-#endif
-
 #define test_run(test)\
   printf("[%s:%s:%i] Running test '%s'... ", __FILE__, __FUNCTION__, __LINE__, #test);\
   test_setup();\
@@ -81,11 +68,12 @@ stack_measure_pop(void* arg)
     int i;
 
     clock_gettime(CLOCK_MONOTONIC, &t_start[args->id]);
-    for (i = 0; i < MAX_PUSH_POP / NB_THREADS; i++)
-      {
-        // See how fast your implementation can pop MAX_PUSH_POP elements in parallel
-      }
-    clock_gettime(CLOCK_MONOTONIC, &t_stop[args->id]);
+		for (i = 0; i < MAX_PUSH_POP / NB_THREADS; i++)
+		{
+			// See how fast your implementation can pop MAX_PUSH_POP elements in parallel
+			stack_pop(stack);
+		}
+clock_gettime(CLOCK_MONOTONIC, &t_stop[args->id]);
 
     return NULL;
   }
@@ -98,9 +86,11 @@ stack_measure_push(void* arg)
 
   clock_gettime(CLOCK_MONOTONIC, &t_start[args->id]);
   for (i = 0; i < MAX_PUSH_POP / NB_THREADS; i++)
-    {
-        // See how fast your implementation can push MAX_PUSH_POP elements in parallel
-    }
+	{
+		// See how fast your implementation can push MAX_PUSH_POP elements in parallel
+		stack_push(stack, i);
+//		printf("%d on %d\n", i, args->id);
+	}
   clock_gettime(CLOCK_MONOTONIC, &t_stop[args->id]);
 
   return NULL;
@@ -320,6 +310,12 @@ setbuf(stdout, NULL);
   stack_measure_arg_t arg[NB_THREADS];
 
   test_setup();
+#if MEASURE == 1
+	for(int j = 0; j < MAX_PUSH_POP; j++) {
+		stack_push(stack, j);
+	}
+#endif
+
   pthread_attr_init(&attr);
 
   clock_gettime(CLOCK_MONOTONIC, &start);
