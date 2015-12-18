@@ -8,7 +8,7 @@
 #include "milli.h"
 
 
-#define SIZE 1024
+#define SIZE 2048
 #define MAXPRINTSIZE 2047
 
 
@@ -58,39 +58,14 @@ int main() {
   bitonic_cpu(data, SIZE);
   printf("%f\n", GetSeconds());
 
-	int *devdata;
-	cudaMalloc((void**)&devdata, SIZE*sizeof(int));
-	cudaMemcpy(devdata, data2, SIZE*sizeof(int), cudaMemcpyHostToDevice);
-
-	dim3 dimBlock(min(SIZE, 1024), 1);
-	dim3 dimGrid(1 + (1024 / SIZE), 1);
-
-  ResetMilli();
-	uint j, k;
-	// Outer loop, double size for each step.
-  for (k = 2; k <= SIZE; k = 2*k) {
-		// Inner loop, half size for each step
-    for (j = k >> 1; j > 0; j = j >> 1) {
-			bitonic_gpu<<<dimGrid, dimBlock>>>(devdata, SIZE, j, k);
-		}
-	}
-	cudaThreadSynchronize();
-  printf("%f\n", GetSeconds());
-
-	cudaError_t err = cudaPeekAtLastError();
-	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
-
-	cudaMemcpy(data2, devdata, SIZE*sizeof(int), cudaMemcpyDeviceToHost);
-	cudaFree(devdata);
-
-	err = cudaPeekAtLastError();
-	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
+	bitonic_gpu_main(data2, SIZE);
 
 	bool data_correct = true;
   for (int i = 0; i < SIZE; i++) {
     if (data[i] != data2[i]) {
 			data_correct = false;
-      printf("Error at output line %d,   %d != %d.\n", i, data[i], data2[i]);
+			if (SIZE <= MAXPRINTSIZE)
+				printf("Error at output line %d,   %d != %d.\n", i, data[i], data2[i]);
     }
 		else if (SIZE <= MAXPRINTSIZE) {
       printf("Correct output on line %d, %d == %d.\n", i, data[i], data2[i]);
