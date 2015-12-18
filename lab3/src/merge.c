@@ -156,12 +156,16 @@ int drake_start(task_t *task) {
 }
 
 // There something in the link or the producer is alive.
-static bool is_alive(link_t* link) {
-	return link->prod != NULL && link->prod->status < TASK_KILLED && pelib_cfifo_length(int)(link->buffer) > 0;
+static bool is_link_dead(link_t* link) {
+	return (link->prod == NULL || link->prod->status >= TASK_KILLED) && pelib_cfifo_length(int)(link->buffer) == 0;
 }
 
 static bool move(link_t* from, link_t* to){
 	pelib_cfifo_push(int)(to->buffer, pelib_cfifo_pop(int)(from->buffer));
+}
+
+static bool is_full(link_t* link) {
+	return pelib_cfifo_length(int)(link->buffer) >= pelib_cfifo_capacity(int)(link->buffer);
 }
 
 int drake_run(task_t *task) {
@@ -181,7 +185,7 @@ int drake_run(task_t *task) {
 
 	while (pelib_cfifo_length(int)(left_link->buffer) > 0 &&
 				 pelib_cfifo_length(int)(right_link->buffer) > 0 &&
-				 !pelib_cfifo_is_full(size_t)(parent_link->buffer)) {
+				 !is_full(parent_link)) {
 		int left_val = pelib_cfifo_peek(int)(left_link->buffer, 0);
 		int right_val = pelib_cfifo_peek(int)(right_link->buffer, 0);
 		if (left_val < right_val) {
@@ -192,15 +196,15 @@ int drake_run(task_t *task) {
 		}
 	}
 
-	if (!is_alive(right_link)) {
+	if (is_link_dead(right_link)) {
 		while (pelib_cfifo_length(int)(left_link->buffer) > 0 &&
-					 !pelib_cfifo_is_full(size_t)(parent_link->buffer)) {
+					 !is_full(parent_link)) {
 			move(left_link, parent_link);
 		}
 	}
-	if (!is_alive(left_link)) {
+	if (is_link_dead(left_link)) {
 		while (pelib_cfifo_length(int)(right_link->buffer) > 0 &&
-					 !pelib_cfifo_is_full(size_t)(parent_link->buffer)) {
+					 !is_full(parent_link)) {
 			move(right_link, parent_link);
 		}
 	}
