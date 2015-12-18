@@ -9,7 +9,7 @@
 
 
 #define SIZE 131072
-#define MAXPRINTSIZE 2047
+#define MAXPRINTSIZE 128
 
 
 int data[SIZE];
@@ -56,9 +56,11 @@ int main() {
 
   ResetMilli();
   bitonic_cpu(data, SIZE);
-  printf("%f\n", GetSeconds());
+  printf("%fms\n", GetSeconds());
 
+  ResetMilli();
 	bitonic_gpu_main(data2, SIZE);
+  printf("%fms\n", GetSeconds());
 
 	bool data_correct = true;
   for (int i = 0; i < SIZE; i++) {

@@ -32,9 +32,8 @@ void bitonic_gpu_main(int* data, uint size) {
 
 	dim3 dimBlock(min(size, 1024), 1);
 	dim3 dimGrid(1 + (size / 1024), 1);
-	printf("Block: %d, Grid: %d\n", dimBlock.x, dimGrid.x);
+	//printf("Block: %d, Grid: %d\n", dimBlock.x, dimGrid.x);
 
-  ResetMilli();
 	uint j, k;
 	// Outer loop, double size for each step.
   for (k = 2; k <= size; k = 2*k) {
@@ -43,7 +42,6 @@ void bitonic_gpu_main(int* data, uint size) {
 			bitonic_gpu<<<dimGrid, dimBlock>>>(devdata, j, k);
 		}
 	}
-  printf("%f\n", GetSeconds());
 
 	cudaError_t err = cudaPeekAtLastError();
 	if (err) printf("cudaPeekAtLastError %d %s\n", err, cudaGetErrorString(err));
