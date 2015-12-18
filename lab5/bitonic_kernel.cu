@@ -24,13 +24,15 @@ void bitonic_gpu(int *data, int j, int k) {
 	}
 }
 
+
 void bitonic_gpu_main(int* data, uint size) {
 	int *devdata;
 	cudaMalloc((void**)&devdata, size*sizeof(int));
 	cudaMemcpy(devdata, data, size*sizeof(int), cudaMemcpyHostToDevice);
 
 	dim3 dimBlock(min(size, 1024), 1);
-	dim3 dimGrid(1 + (1024 / size), 1);
+	dim3 dimGrid(1 + (size / 1024), 1);
+	printf("Block: %d, Grid: %d\n", dimBlock.x, dimGrid.x);
 
   ResetMilli();
 	uint j, k;
@@ -39,10 +41,8 @@ void bitonic_gpu_main(int* data, uint size) {
 		// Inner loop, half size for each step
     for (j = k >> 1; j > 0; j = j >> 1) {
 			bitonic_gpu<<<dimGrid, dimBlock>>>(devdata, j, k);
-			cudaThreadSynchronize();
 		}
 	}
-	cudaDeviceSynchronize();
   printf("%f\n", GetSeconds());
 
 	cudaError_t err = cudaPeekAtLastError();

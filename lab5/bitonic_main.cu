@@ -8,7 +8,7 @@
 #include "milli.h"
 
 
-#define SIZE 2048
+#define SIZE 131072
 #define MAXPRINTSIZE 2047
 
 
