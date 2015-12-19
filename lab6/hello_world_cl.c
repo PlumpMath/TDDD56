@@ -56,11 +56,11 @@ int main(int argc, char** argv) {
 
 	cl_platform_id platform;
 	unsigned int no_plat;
-	err = clGetPlatformIDs(1,&platform,&no_plat)
+	err = clGetPlatformIDs(1,&platform,&no_plat);
 	printCLError(err,0);
 
 	// Where to run
-	err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
+	err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 2, &device_id, NULL);
 	printCLError(err,1);
 
 	context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
@@ -70,11 +70,26 @@ int main(int argc, char** argv) {
 	printCLError(err,4);
 
 	// What to run
-	program = clCreateProgramWithSource(context, 1, (const char **) & KernelSource, NULL, &err);
+	program = clCreateProgramWithSource(context, 1, (const char **) &KernelSource, NULL, &err);
 	printCLError(err,5);
 
 	err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
 	printCLError(err,12);
+
+	// Shows the log
+	char* build_log;
+	size_t log_size;
+	// First call to know the proper size
+	clGetProgramBuildInfo(program, &device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+	printf("Yello\n");
+	build_log = malloc(sizeof(char)*(log_size + 1));
+
+	// Second call to get the log
+	clGetProgramBuildInfo(program, &device_id, CL_PROGRAM_BUILD_LOG, log_size, build_log, NULL);
+	build_log[log_size] = '\0';
+	printf("%s\n", build_log);
+	free(build_log);
+
 	kernel = clCreateKernel(program, "hello", &err);
 	printCLError(err,6);
 
@@ -115,6 +130,5 @@ int main(int argc, char** argv) {
 	clReleaseKernel(kernel);
 	clReleaseCommandQueue(commands);
 	clReleaseContext(context);
-	sleep(1); // Leopard pty bug workaround.
 	return 0;
 }

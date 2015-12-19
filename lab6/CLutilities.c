@@ -10,7 +10,7 @@ char* readFile(const char * filename)
 	FILE *theFile;
 	char c;
 	long howMuch;
-	
+
 	// Get file length
 	theFile = fopen(filename, "rb");
 	if (theFile == NULL)
@@ -28,7 +28,7 @@ char* readFile(const char * filename)
 	fclose(theFile);
 
 	printf("%ld bytes\n", howMuch);
-	
+
 	// Read it again
 	data = (char *)malloc(howMuch);
 	theFile = fopen(filename, "rb");
@@ -42,12 +42,9 @@ char* readFile(const char * filename)
 	return data;
 }
 
-void printCLError(cl_int ciErrNum, int location)
-{	
-    if (ciErrNum != CL_SUCCESS)
-    {
-      switch (location)
-      {
+void printCLError(cl_int ciErrNum, int location) {
+    if (ciErrNum != CL_SUCCESS) {
+      switch (location) {
         case 0:
           printf("Error @ clGetPlatformIDs: ");
           break;
@@ -91,8 +88,7 @@ void printCLError(cl_int ciErrNum, int location)
           printf("Error @ unknown location: ");
           break;
       }
-      switch (ciErrNum)
-      {
+      switch (ciErrNum) {
         case CL_INVALID_PROGRAM_EXECUTABLE:
           printf("CL_INVALID_PROGRAM_EXECUTABLE\n");
           break;
@@ -153,7 +149,7 @@ void printCLError(cl_int ciErrNum, int location)
         case CL_DEVICE_NOT_FOUND:
           printf("CL_DEVICE_NOT_FOUND\n");
           break;
-        
+
         default:
           printf("Error: Unknown error\n");
           break;
@@ -161,4 +157,3 @@ void printCLError(cl_int ciErrNum, int location)
       exit;
     }
 }
-
