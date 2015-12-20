@@ -30,8 +30,16 @@ const char *KernelSource = "   \n" \
 
 #define DATA_SIZE (16)
 
+void print_device_name(cl_device_id device_id) {
+	size_t valueSize;
+	clGetDeviceInfo(device_id, CL_DEVICE_NAME, 0, NULL, &valueSize);
+	char* value = (char*) malloc(valueSize);
+	clGetDeviceInfo(device_id, CL_DEVICE_NAME, valueSize, value, NULL);
+	printf("Device: %s\n", value);
+	free(value);
+}
+
 int main(int argc, char** argv) {
-	print_devices();
 
 	int err;                   // error code returned from api calls
 	cl_device_id device_id;    // compute device id
@@ -54,10 +62,6 @@ int main(int argc, char** argv) {
 	// Output data
 	char c[DATA_SIZE];
 
-	// Print original data
-	printf("%s, ", a);
-
-
 	cl_platform_id platform;
 	unsigned int no_plat;
 	err = clGetPlatformIDs(1,&platform,&no_plat);
@@ -66,6 +70,7 @@ int main(int argc, char** argv) {
 	// Where to run
 	err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 2, &device_id, NULL);
 	printCLError(err,1);
+	print_device_name(device_id);
 
 	context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
 	printCLError(err,2);
@@ -84,13 +89,11 @@ int main(int argc, char** argv) {
 	char* build_log;
 	size_t log_size;
 	// First call to know the proper size
-	printf("Device id: %d\n", device_id);
 	clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-	printf("Print size: %d\n", log_size);
 	build_log = malloc(sizeof(char)*(log_size + 1));
 
 	// Second call to get the log
-	clGetProgramBuildInfo(program, &device_id, CL_PROGRAM_BUILD_LOG, log_size, build_log, NULL);
+	clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, build_log, NULL);
 	build_log[log_size] = '\0';
 	printf("%s\n", build_log);
 	free(build_log);
@@ -124,6 +127,9 @@ int main(int argc, char** argv) {
 	err = clEnqueueReadBuffer(commands, output, CL_TRUE, 0, sizeof(char) * count, c, 0, NULL, NULL );
 	printCLError(err,11);
 
+
+	// Print original data
+	printf("%s ", a);
 
 	//	Print result
 	printf("%s\n", c);

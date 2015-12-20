@@ -154,6 +154,6 @@ void printCLError(cl_int ciErrNum, int location) {
           printf("Error: Unknown error\n");
           break;
       }
-      exit;
+      exit(123);
     }
 }
