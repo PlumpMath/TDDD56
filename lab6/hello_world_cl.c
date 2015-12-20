@@ -5,13 +5,15 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "CLutilities.h"
-
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
 #else
 #include <CL/cl.h>
 #endif
+
+#include "CLutilities.h"
+#include "print_devices.h"
+
 
 const char *KernelSource = "   \n" \
 	"__kernel void hello(          \n" \
@@ -29,6 +31,8 @@ const char *KernelSource = "   \n" \
 #define DATA_SIZE (16)
 
 int main(int argc, char** argv) {
+	print_devices();
+
 	int err;                   // error code returned from api calls
 	cl_device_id device_id;    // compute device id
 	cl_context context;        // compute context
@@ -80,8 +84,9 @@ int main(int argc, char** argv) {
 	char* build_log;
 	size_t log_size;
 	// First call to know the proper size
-	clGetProgramBuildInfo(program, &device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-	printf("Yello\n");
+	printf("Device id: %d\n", device_id);
+	clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+	printf("Print size: %d\n", log_size);
 	build_log = malloc(sizeof(char)*(log_size + 1));
 
 	// Second call to get the log
