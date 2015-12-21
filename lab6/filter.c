@@ -30,7 +30,7 @@ static cl_kernel theKernel;
 static size_t noWG;
 static cl_device_id device;
 
-int init_OpenCL() {
+void init_OpenCL() {
   cl_int ciErrNum = CL_SUCCESS;
   cl_platform_id platform;
   unsigned int no_plat;
@@ -100,7 +100,7 @@ void close_OpenCL() {
 // Global variables for image data
 
 unsigned char *image, *out;
-cl_uint n, m; // Image size
+cl_int n, m; // Image size
 
 ////////////////////////////////////////////////////////////////////////////////
 // main computation function
@@ -177,11 +177,7 @@ int main( int argc, char** argv) {
 	glutDisplayFunc(Draw);
 
 	ResetMilli();
-	if (init_OpenCL()<0) {
-		printf("OpenCL could not be initialized!\n");
-		close_OpenCL();
-		return 1;
-	}
+	init_OpenCL();
 	readAndBuildKernel("filter.cl");
 	computeImages();
 	close_OpenCL();
