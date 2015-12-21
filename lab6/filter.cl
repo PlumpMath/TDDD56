@@ -2,6 +2,17 @@
  * Image filter in OpenCL
  */
 
+/* If we understand this correctly the current OpenCL and CUDA
+ * terms corresponds to each other:
+ * gridDim                         == get_num_groups()
+ * blockDim                        == get_local_size()
+ * blockIdx                        == get_group_id()
+ * threadIdx                       == get_local_id()
+ * blockIdx * blockDim + threadIdx == get_global_id()
+ * gridDim * blockDim              == get_global_size()
+ */
+
+
 #define KERNELSIZE 2
 
 __kernel void filter(__global unsigned char *image, __global unsigned char *out, const unsigned int n, const unsigned int m) {
