@@ -70,9 +70,15 @@ By getting what corresponds to a thread id.
 
 \subsubsection{How much data did you put in local (shared memory?}
 
+We put get_local_size() * 4 * 3 integers in the local memory.
+
 \subsubsection{How much data does each thread copy to local memory?}
 
+It copies 4 * 3 integers to the local memory.
+
 \subsubsection{How did you handle the necessary overlap between the work groups?}
+
+
 
 \subsubsection{If we would like to increase the block size, about how big work groups would be safe to use in this case? Why?}
 
