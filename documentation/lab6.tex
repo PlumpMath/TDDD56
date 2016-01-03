@@ -22,26 +22,25 @@ basicstyle=\footnotesize
 At first we create buffers on the device where our data to and from the device can recide.
 
 \begin{lstlisting}
-	input = clCreateBuffer(context,  CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,  sizeof(char) * DATA_SIZE, a, NULL);
-  	input2 = clCreateBuffer(context,  CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,  sizeof(char) * DATA_SIZE, b, NULL);
-	output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(char) * DATA_SIZE, NULL, NULL);
+input = clCreateBuffer(context,  CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,  sizeof(char) * DATA_SIZE, a, NULL);
+input2 = clCreateBuffer(context,  CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,  sizeof(char) * DATA_SIZE, b, NULL);
+output = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(char) * DATA_SIZE, NULL, NULL);
 \end{lstlisting}
 
-With the CL_MEM_USE_HOST_PTR we ask the OpenCL implementation to use the memory referenced by the pointer as storage. It is then free to copy the data to the device, we guess, but we don't have to actively call a ``copy out the data'' command.
+With the CL\_MEM\_USE\_HOST\_PTR we ask the OpenCL implementation to use the memory referenced by the pointer as storage. It is then free to copy the data to the device, we guess, but we don't have to actively call a ``copy out the data'' command.
 
 We do however wait for the output to be completely written to the output buffer, so there's that.
 
 \begin{lstlisting}
-  err = clEnqueueReadBuffer(commands, output, CL_TRUE, 0, sizeof(char) * count, c, 0, NULL, NULL );
+err = clEnqueueReadBuffer(commands, output, CL_TRUE, 0, sizeof(char) * count, c, 0, NULL, NULL );
 \end{lstlisting}
 
 But there's a thing we're conflicted about, we suspect that one of the comments in the hello-world program are incorrec; namely this one:
 
 \begin{lstlisting}
-  // Send data
-	err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), \&input);
-	err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), \&input2);
-	err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), \&output);
+err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input);
+err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &input2);
+err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &output);
 \end{lstlisting}
 
 We believe that what clSetKernelArg merely tells the OpenCL implementation where it can find it's arguments, much like the OpenGL glVertexAttribPointer, and has nothing to do with the transfer of the data.
@@ -70,19 +69,41 @@ By getting what corresponds to a thread id.
 
 \subsubsection{How much data did you put in local (shared memory?}
 
-We put get_local_size() * 4 * 3 integers in the local memory.
+We put 1000 * 3 integers in the local memory. An entirely arbitrary number that didn't end up with out program segfaulting.
+
 
 \subsubsection{How much data does each thread copy to local memory?}
 
-It copies 4 * 3 integers to the local memory.
+Each thread copies 4 * 3 integers to the local memory.
+
+\begin{lstlisting}[float,label=lst:caching,caption=nextHopInfo: Caching data in local/shared memory.]
+__local unsigned char local_data[1000 * 3];
+for (k = 0; k < KERNELSIZE + 1; k += KERNELSIZE) {
+  for (l = 0; l < KERNELSIZE + 1; l += KERNELSIZE) {
+    for (uint i = 0; i < 3; i++) {
+      local_data[((localY + k) * (blockDim + KERNELSIZE) + localX + l) * 3 + i] =
+      image[((globalY + k) * n + globalX + l) * 3 + i];
+    }
+  }
+}
+\end{lstlisting}
+
 
 \subsubsection{How did you handle the necessary overlap between the work groups?}
 
+There is some overlap between the data being cached by the work groups, but we had no perticular issues with it really. It's just that we end up doing a bit too many global memory accesses.
 
 
 \subsubsection{If we would like to increase the block size, about how big work groups would be safe to use in this case? Why?}
 
+We need to have enough local memory to store the data. How much that is, well, that depends.
+
+
 \subsubsection{How much speedup did you get over the naive version?}
+
+The naive implementation ran in: 0.002872s.
+
+Our improved version ran in: 0.001430.
 
 
 \end{document}
