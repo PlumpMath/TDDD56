@@ -28,8 +28,8 @@ __kernel void filter(__global unsigned char *image, __global unsigned char *out,
 	int divby = (KERNELSIZE+1)*(KERNELSIZE+1);
 
 	__local unsigned char local_data[1000 * 3];
-	for (k = 0; k < KERNELSIZE + 1; k++) {
-		for (l = 0; l < KERNELSIZE + 1; l++) {
+	for (k = 0; k < KERNELSIZE + 1; k += KERNELSIZE) {
+		for (l = 0; l < KERNELSIZE + 1; l += KERNELSIZE) {
 			for (uint i = 0; i < 3; i++) {
 				local_data[((localY + k) * (blockDim + KERNELSIZE) + localX + l) * 3 + i] =
 					image[((globalY + k) * n + globalX + l) * 3 + i];
@@ -49,7 +49,6 @@ __kernel void filter(__global unsigned char *image, __global unsigned char *out,
 					sumx += local_data[((localY + k) * (blockDim + KERNELSIZE) + (localX + l)) * 3];
 					sumy += local_data[((localY + k) * (blockDim + KERNELSIZE) + (localX + l)) * 3 + 1];
 					sumz += local_data[((localY + k) * (blockDim + KERNELSIZE) + (localX + l)) * 3 + 2];
-					// sumz += image[((globalY+k) * n + (globalX+l)) * 3 + 2];
 				}
 			}
 			out[(globalY * n + globalX) * 3+0] = sumx / divby;
