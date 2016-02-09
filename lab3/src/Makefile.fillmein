@@ -16,11 +16,11 @@ CXXFLAGS =
 CXX_LDFLAGS =  
 
 ## Number of threads to compile
-NB_THREADS = 2
+NB_THREADS = 4
 
 ## Task graph description
-DRAKE_TASKGRAPH = merge-2.graphml
+DRAKE_TASKGRAPH = merge-4.graphml
 ## Drake target paltform description
-DRAKE_PLATFORM = platform-2.dat
+DRAKE_PLATFORM = platform-4.dat
 ## Drake schedule to use
-DRAKE_SCHEDULE = ## Let lpt generate a schedule
+DRAKE_SCHEDULE = schedule-4.xml## Let lpt generate a schedule

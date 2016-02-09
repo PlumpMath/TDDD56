@@ -148,7 +148,6 @@ int drake_start(task_t *task) {
 		if(link->prod == NULL) {
 			// Run sequential pre-sort.
 			sort((int*)link->buffer->buffer, pelib_cfifo_capacity(int)(link->buffer));
-			printf("%d\n", pelib_cfifo_length(int)(link->buffer));
 		}
 	}
 
