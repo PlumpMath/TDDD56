@@ -1,3 +1,6 @@
 data/
 setupenv.sh
+src/*.o
+src/*.e
+src/*.d
 
