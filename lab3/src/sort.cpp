@@ -206,7 +206,6 @@ static void parallel_quicksort(int *array, int left, int right, int threads_avai
 		if (threads_available > 0) {
 			high_resolution_clock::time_point end = high_resolution_clock::now();
 			duration<double, std::milli> duration = end - start;
-			std::cout << "Main thread ran in: " << duration.count() << std::endl;
 		}
 	}
 
@@ -222,7 +221,6 @@ static void* parallel_quicksort_thread(void* _arg) {
 
 	high_resolution_clock::time_point end = high_resolution_clock::now();
 	duration<double, std::milli> duration = end - arg->start;
-	std::cout << "Thread " << arg->thread_id << " finished in: " << duration.count() << std::endl;
 }
 
 #endif
@@ -239,8 +237,6 @@ sort(int* array, size_t size) {
 	// the number of threads to use and is defined at compareile time. NB_THREADS == 0 denotes a sequential version.
 	// NB_THREADS == 1 is a parallel version using only one thread that can be useful to monitor the overhead
 	// brought by addictional parallelization code.
-
-	printf("NB_THREADS=%d\n", NB_THREADS);
 
 	// Reproduce this structure here and there in your code to compare sequential or parallel versions of your code.
 #if NB_THREADS == 0
